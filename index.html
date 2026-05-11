@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenFlow - Thiền Tịnh Vô Đối</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+            color: white;
+        }
+
+        h1, h2, h3, .font-space {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Hình nền động */
+        .bg-animated {
+            position: fixed;
+            top: -5%; left: -5%; width: 110%; height: 110%;
+            background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            animation: panBg 60s infinite alternate linear;
+            filter: brightness(0.6) contrast(1.1);
+        }
+
+        @keyframes panBg {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.05) translate(-1%, -1%); }
+        }
+
+        /* Hiệu ứng kính */
+        .glass {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Vòng tròn đếm ngược */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* CSS THANH VOLUME */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            position: relative;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Dành cho Chrome, Safari, Edge */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -5px; 
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        /* Dành cho Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+        }
+
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .audio-active {
+            opacity: 1 !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center">
+
+    <div class="bg-animated"></div>
+
+    <main id="main-app" class="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 h-screen flex flex-col">
+        
+        <header class="w-full text-center py-6">
+            <h2 class="text-2xl font-space font-bold tracking-widest text-white/80 uppercase">ZenFlow</h2>
+            <p id="quote-display" class="mt-4 text-sm md:text-base text-slate-200/80 font-light italic h-12 transition-opacity duration-500"></p>
+        </header>
+
+        <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-12 w-full">
+            
+            <!-- BỘ ĐẾM GIỜ -->
+            <div class="glass rounded-[3rem] p-8 md:p-12 flex flex-col items-center justify-center w-full max-w-md relative">
+                <div class="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-white/10 stroke-current" stroke-width="2" cx="50" cy="50" r="48" fill="transparent"></circle>
+                        <circle id="progress-circle" class="text-white stroke-current progress-ring__circle" stroke-width="2" stroke-linecap="round" cx="50" cy="50" r="48" fill="transparent" stroke-dasharray="301.59" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="z-10 flex flex-col items-center">
+                        <span id="time-display" class="font-space text-6xl md:text-7xl font-bold tracking-tighter drop-shadow-md">25:00</span>
+                        <span id="status-display" class="uppercase tracking-widest text-xs mt-2 text-white/60 font-semibold">Sẵn sàng</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-6 mt-10">
+                    <button id="reset-btn" class="p-3 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                        <i class="ph ph-arrow-counter-clockwise text-2xl"></i>
+                    </button>
+                    <button id="play-pause-btn" class="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                        <i class="ph-fill ph-play text-3xl ml-1" id="play-icon"></i>
+                    </button>
+                    <button id="mode-btn" class="p-3 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors" title="Đổi thời gian">
+                        <i class="ph ph-timer text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- BỘ MIX ÂM THANH -->
+            <div class="glass rounded-3xl p-6 w-full max-w-sm flex flex-col gap-6">
+                <h3 class="font-space text-lg font-semibold tracking-wide text-white/90 mb-2 text-center md:text-left">Không gian âm thanh</h3>
+                
+                <!-- Kênh Lofi -->
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-amber-200 audio-toggle audio-active" data-track="lofi" title="Bật/Tắt Lofi">
+                        <i class="ph-fill ph-music-notes text-xl"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center text-xs text-white/60 mb-2">
+                            <span>Nhạc Lofi Chill</span>
+                            <div class="flex gap-3 text-white/80">
+                                <button id="prev-track" class="hover:text-white transition-colors" title="Bài trước"><i class="ph-fill ph-skip-back text-sm"></i></button>
+                                <button id="next-track" class="hover:text-white transition-colors" title="Bài tiếp"><i class="ph-fill ph-skip-forward text-sm"></i></button>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="100" value="50" class="volume-slider" data-track="lofi">
+                    </div>
+                </div>
+
+                <!-- Kênh Mưa -->
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-blue-300 audio-toggle opacity-50" data-track="rain" title="Bật/Tắt Mưa">
+                        <i class="ph-fill ph-cloud-rain text-xl"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs text-white/60 mb-2">
+                            <span>Tiếng Mưa</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" class="volume-slider" data-track="rain">
+                    </div>
+                </div>
+
+                <!-- Kênh Lửa trại -->
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-orange-400 audio-toggle opacity-50" data-track="fire" title="Bật/Tắt Lửa">
+                        <i class="ph-fill ph-fire text-xl"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs text-white/60 mb-2">
+                            <span>Lửa Trại</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" class="volume-slider" data-track="fire">
+                    </div>
+                </div>
+
+                <!-- Kênh Sóng biển -->
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-cyan-200 audio-toggle opacity-50" data-track="waves" title="Bật/Tắt Sóng">
+                        <i class="ph-fill ph-waves text-xl"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs text-white/60 mb-2">
+                            <span>Sóng Biển</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" class="volume-slider" data-track="waves">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <footer class="w-full text-center py-4 text-white/30 text-xs">
+            Bấm vào bất kỳ đâu trên màn hình để âm thanh bắt đầu.
+        </footer>
+    </main>
+
+    <!-- Modal chọn thời gian -->
+    <div id="time-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity">
+        <div class="glass rounded-2xl p-8 max-w-sm w-full mx-4 transform scale-95 transition-transform" id="time-modal-content">
+            <h3 class="text-xl font-space mb-6 text-center">Chọn thời gian</h3>
+            
+            <div class="mb-6">
+                <div class="flex justify-between text-white/70 text-sm mb-2">
+                    <span>1p</span>
+                    <span id="slider-val-display" class="font-bold text-white">25 phút</span>
+                    <span>180p</span>
+                </div>
+                <input type="range" id="time-slider" min="1" max="180" value="25" class="w-full">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="10">10 Phút</button>
+                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="30">30 Phút</button>
+                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="60">1 Giờ</button>
+                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="180">3 Giờ</button>
+            </div>
+            <button id="close-modal-btn" class="mt-6 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">Lưu & Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        // ============ QUẢN LÝ AUDIO CONTEXT ============
+        let audioContext = null;
+        let isAudioInitialized = false;
+
+        function initAudioContext() {
+            if (isAudioInitialized) return;
+            
+            // Safari yêu cầu webkitAudioContext
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!audioContext) {
+                audioContext = new AudioContextClass();
+            }
+            
+            // Resume audio context nếu bị suspend
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('Audio Context resumed');
+                });
+            }
+            
+            isAudioInitialized = true;
+        }
+
+        // Trigger audio context với bất kỳ sự kiện người dùng nào
+        ['click', 'touchstart', 'keydown'].forEach(event => {
+            document.addEventListener(event, initAudioContext, { once: true });
+        });
+
+        // ============ CẤU HÌNH ÂM THANH ============
+        const audioElements = {
+            lofi: new Audio("https://upload.wikimedia.org/wikipedia/commons/c/c9/Kevin_MacLeod_-_Dream_Culture.ogg"),
+            rain: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_d5d5d88e05.mp3"),
+            fire: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_0c3bb82b53.mp3"),
+            waves: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b899c77f3.mp3")
+        };
+
+        const bellSound = new Audio("https://upload.wikimedia.org/wikipedia/commons/f/f6/Singing_bowl_strike.ogg");
+
+        // Bật chế độ lặp lại vô tận
+        Object.values(audioElements).forEach(audio => { 
+            audio.loop = true;
+            audio.crossOrigin = "anonymous";
+        });
+        bellSound.crossOrigin = "anonymous";
+
+        // Playlist Lofi Chill
+        const lofiPlaylist = [
+            "https://upload.wikimedia.org/wikipedia/commons/c/c9/Kevin_MacLeod_-_Dream_Culture.ogg",
+            "https://upload.wikimedia.org/wikipedia/commons/4/4b/Kevin_MacLeod_-_Luminous_Rain.ogg",
+            "https://upload.wikimedia.org/wikipedia/commons/5/5b/Kevin_MacLeod_-_Sovereign.ogg",
+            "https://upload.wikimedia.org/wikipedia/commons/1/13/Kevin_MacLeod_-_Relaxing_Piano_Music.ogg"
+        ];
+        let currentTrackIdx = 0;
+
+        // ============ KHỞI TẠO VOLUME ============
+        const volumeSliders = document.querySelectorAll('.volume-slider');
+        const audioToggles = document.querySelectorAll('.audio-toggle');
+
+        // Khôi phục volume từ localStorage hoặc mặc định
+        const savedVolumes = JSON.parse(localStorage.getItem('audioVolumes')) || {
+            lofi: 0.5,
+            rain: 0,
+            fire: 0,
+            waves: 0
+        };
+
+        Object.keys(audioElements).forEach(key => {
+            audioElements[key].volume = savedVolumes[key] || 0;
+            const slider = document.querySelector(`.volume-slider[data-track="${key}"]`);
+            if (slider) {
+                slider.value = Math.round((savedVolumes[key] || 0) * 100);
+            }
+        });
+
+        // ============ XỬ LÝ SLIDER VOLUME ============
+        volumeSliders.forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                initAudioContext();
+                
+                const trackId = e.target.getAttribute('data-track');
+                const val = parseInt(e.target.value);
+                const volume = val / 100;
+                
+                audioElements[trackId].volume = volume;
+                
+                // Lưu vào localStorage
+                const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
+                volumes[trackId] = volume;
+                localStorage.setItem('audioVolumes', JSON.stringify(volumes));
+                
+                const toggleBtn = document.querySelector(`.audio-toggle[data-track="${trackId}"]`);
+                
+                if (val > 0) {
+                    toggleBtn.classList.remove('opacity-50');
+                    toggleBtn.classList.add('audio-active');
+                    
+                    // Phát audio nếu timer đang chạy
+                    if (isRunning && audioElements[trackId].paused) {
+                        audioElements[trackId].play().catch(e => console.log("Play error:", e));
+                    }
+                } else {
+                    toggleBtn.classList.add('opacity-50');
+                    toggleBtn.classList.remove('audio-active');
+                    audioElements[trackId].pause();
+                }
+            });
+        });
+
+        // ============ XỬ LÝ BẬT/TẮT NHANH ============
+        audioToggles.forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                initAudioContext();
+                
+                const btn = e.currentTarget;
+                const trackId = btn.getAttribute('data-track');
+                const slider = document.querySelector(`.volume-slider[data-track="${trackId}"]`);
+                
+                if (btn.classList.contains('opacity-50')) {
+                    // Bật audio
+                    btn.classList.remove('opacity-50');
+                    btn.classList.add('audio-active');
+                    slider.value = 50; 
+                    audioElements[trackId].volume = 0.5;
+                    
+                    // Lưu vào localStorage
+                    const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
+                    volumes[trackId] = 0.5;
+                    localStorage.setItem('audioVolumes', JSON.stringify(volumes));
+                    
+                    // Phát audio nếu timer đang chạy
+                    if (isRunning) {
+                        audioElements[trackId].play().catch(e => console.log("Play error:", e));
+                    }
+                } else {
+                    // Tắt audio
+                    btn.classList.add('opacity-50');
+                    btn.classList.remove('audio-active');
+                    slider.value = 0; 
+                    audioElements[trackId].volume = 0;
+                    
+                    // Lưu vào localStorage
+                    const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
+                    volumes[trackId] = 0;
+                    localStorage.setItem('audioVolumes', JSON.stringify(volumes));
+                    
+                    audioElements[trackId].pause();
+                }
+            });
+        });
+
+        // ============ XỬ LÝ ĐỔI BÀI HÁT ============
+        function playLofiTrack() {
+            const currentVol = document.querySelector('.volume-slider[data-track="lofi"]').value / 100;
+            audioElements.lofi.src = lofiPlaylist[currentTrackIdx];
+            audioElements.lofi.volume = currentVol;
+            
+            if (currentVol > 0) {
+                audioElements.lofi.play().catch(e => console.log("Lofi play error:", e));
+            }
+        }
+
+        document.getElementById('next-track').addEventListener('click', () => {
+            initAudioContext();
+            currentTrackIdx = (currentTrackIdx + 1) % lofiPlaylist.length;
+            playLofiTrack();
+        });
+
+        document.getElementById('prev-track').addEventListener('click', () => {
+            initAudioContext();
+            currentTrackIdx = (currentTrackIdx - 1 + lofiPlaylist.length) % lofiPlaylist.length;
+            playLofiTrack();
+        });
+
+        // ============ QUẢN LÝ TRÍCH DẪN ============
+        const quotes = [
+            "Hít vào tâm tĩnh lặng, thở ra miệng mỉm cười.",
+            "Sự bình yên đến từ bên trong, đừng tìm nó ở bên ngoài.",
+            "Hãy để mọi thứ trôi qua như những đám mây trên bầu trời.",
+            "Mỗi khoảnh khắc là một cơ hội để bắt đầu lại.",
+            "Tập trung vào hiện tại là chiếc chìa khóa của hạnh phúc.",
+            "Không có con đường dẫn đến hạnh phúc, hạnh phúc chính là con đường.",
+            "Tĩnh lặng không phải là trống rỗng, nó chứa đầy những câu trả lời."
+        ];
+        
+        const quoteDisplay = document.getElementById('quote-display');
+        function changeQuote() {
+            quoteDisplay.style.opacity = 0;
+            setTimeout(() => {
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                quoteDisplay.textContent = `"${randomQuote}"`;
+                quoteDisplay.style.opacity = 1;
+            }, 500);
+        }
+        setInterval(changeQuote, 15000);
+        changeQuote();
+
+        // ============ QUẢN LÝ BỘ ĐẾM GIỜ ============
+        let timerDuration = 25 * 60; 
+        let timeRemaining = timerDuration;
+        let timerInterval = null;
+        let isRunning = false;
+
+        const timeDisplay = document.getElementById('time-display');
+        const statusDisplay = document.getElementById('status-display');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const resetBtn = document.getElementById('reset-btn');
+        const progressCircle = document.getElementById('progress-circle');
+        
+        const circumference = 48 * 2 * Math.PI;
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressCircle.style.strokeDashoffset = 0;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) {
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timeDisplay.textContent = formatTime(timeRemaining);
+            const offset = circumference - (timeRemaining / timerDuration) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        // ============ PHÁT AUDIO KHI TIMER CHẠY ============
+        function startAudio() {
+            // Phát tất cả audio có volume > 0
+            Object.keys(audioElements).forEach(key => {
+                const slider = document.querySelector(`.volume-slider[data-track="${key}"]`);
+                const vol = parseInt(slider.value) / 100;
+                
+                if (vol > 0 && audioElements[key].paused) {
+                    audioElements[key].play().catch(e => console.log(`Error playing ${key}:`, e));
+                }
+            });
+        }
+
+        // ============ DỪNG AUDIO KHI TIMER TẠM DỪNG ============
+        function pauseAudio() {
+            Object.keys(audioElements).forEach(key => {
+                if (!audioElements[key].paused) {
+                    audioElements[key].pause();
+                }
+            });
+        }
+
+        function toggleTimer() {
+            initAudioContext();
+            
+            if (isRunning) {
+                // Tạm dừng
+                clearInterval(timerInterval);
+                pauseAudio();
+                playIcon.classList.replace('ph-pause', 'ph-play');
+                playIcon.classList.add('ml-1'); 
+                statusDisplay.textContent = "Tạm dừng";
+            } else {
+                // Bắt đầu
+                if (timeRemaining === 0) timeRemaining = timerDuration;
+                
+                startAudio(); // Phát audio khi start
+                
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    updateDisplay();
+                    
+                    if (timeRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        isRunning = false;
+                        playIcon.classList.replace('ph-pause', 'ph-play');
+                        playIcon.classList.add('ml-1');
+                        statusDisplay.textContent = "Hoàn thành!";
+                        
+                        // Dừng audio và phát chuông
+                        pauseAudio();
+                        bellSound.play().catch(e => console.log("Bell error:", e));
+                        
+                        setTimeout(() => {
+                            alert("🔔 Đã hết thời gian! Chúc bạn một ngày an lành và tràn đầy năng lượng.");
+                        }, 500);
+                    }
+                }, 1000);
+                
+                playIcon.classList.replace('ph-play', 'ph-pause');
+                playIcon.classList.remove('ml-1');
+                statusDisplay.textContent = "Đang tập trung";
+            }
+            isRunning = !isRunning;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeRemaining = timerDuration;
+            pauseAudio();
+            playIcon.classList.replace('ph-pause', 'ph-play');
+            playIcon.classList.add('ml-1');
+            statusDisplay.textContent = "Sẵn sàng";
+            updateDisplay();
+        }
+
+        playPauseBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleTimer();
+            }
+            if (e.key.toLowerCase() === 'r') {
+                resetTimer();
+            }
+        });
+
+        // ============ QUẢN LÝ BẢNG CHỌN GIỜ ============
+        const modeBtn = document.getElementById('mode-btn');
+        const timeModal = document.getElementById('time-modal');
+        const timeModalContent = document.getElementById('time-modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const timePresets = document.querySelectorAll('.time-preset');
+        const timeSlider = document.getElementById('time-slider');
+        const sliderValDisplay = document.getElementById('slider-val-display');
+
+        function openModal() {
+            timeModal.classList.remove('opacity-0', 'pointer-events-none');
+            timeModalContent.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            timeModal.classList.add('opacity-0', 'pointer-events-none');
+            timeModalContent.classList.add('scale-95');
+        }
+
+        modeBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+
+        timeSlider.addEventListener('input', (e) => {
+            const mins = e.target.value;
+            sliderValDisplay.textContent = `${mins} phút`;
+            timerDuration = mins * 60;
+            resetTimer();
+        });
+
+        timePresets.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mins = parseInt(e.target.getAttribute('data-time'));
+                timeSlider.value = mins;
+                sliderValDisplay.textContent = `${mins} phút`;
+                timerDuration = mins * 60;
+                resetTimer();
+                closeModal();
+            });
+        });
+
+        // Đóng modal khi click bên ngoài
+        timeModal.addEventListener('click', (e) => {
+            if (e.target === timeModal) {
+                closeModal();
+            }
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
