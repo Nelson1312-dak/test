@@ -128,11 +128,22 @@
             opacity: 1 !important;
             background: rgba(255, 255, 255, 0.15) !important;
         }
+
+        /* Hidden YouTube Players */
+        .youtube-player {
+            display: none;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col items-center justify-center">
 
     <div class="bg-animated"></div>
+
+    <!-- Hidden YouTube Players -->
+    <div id="youtube-lofi" class="youtube-player"></div>
+    <div id="youtube-rain" class="youtube-player"></div>
+    <div id="youtube-fire" class="youtube-player"></div>
+    <div id="youtube-waves" class="youtube-player"></div>
 
     <main id="main-app" class="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 h-screen flex flex-col">
         
@@ -261,80 +272,135 @@
         </div>
     </div>
 
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
     <script>
-        // ============ QUẢN LÝ AUDIO CONTEXT ============
-        let audioContext = null;
-        let isAudioInitialized = false;
-
-        function initAudioContext() {
-            if (isAudioInitialized) return;
-            
-            // Safari yêu cầu webkitAudioContext
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (!audioContext) {
-                audioContext = new AudioContextClass();
-            }
-            
-            // Resume audio context nếu bị suspend
-            if (audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                    console.log('Audio Context resumed');
-                });
-            }
-            
-            isAudioInitialized = true;
-        }
-
-        // Trigger audio context với bất kỳ sự kiện người dùng nào
-        ['click', 'touchstart', 'keydown'].forEach(event => {
-            document.addEventListener(event, initAudioContext, { once: true });
-        });
-
-        // ============ CẤU HÌNH ÂM THANH ============
-        const audioElements = {
-            lofi: new Audio("https://upload.wikimedia.org/wikipedia/commons/c/c9/Kevin_MacLeod_-_Dream_Culture.ogg"),
-            rain: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_d5d5d88e05.mp3"),
-            fire: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_0c3bb82b53.mp3"),
-            waves: new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b899c77f3.mp3")
+        // ============ YOUTUBE PLAYLIST IDs ============
+        // Các YouTube ID của lofi & ambient sounds (hoạt động ở background)
+        const youtubeVideos = {
+            lofi: [
+                'jfKfPfyJRdk',      // Lofi Girl - Lo-Fi Hip Hop Radio
+                'J-_RbZ8m4Y0',      // Piano Lofi
+                'C1KhL69O6NE',      // Chill Lofi Mix
+            ],
+            rain: 'nKHv1zJq3gI',    // 10 Hours Rain Sounds
+            fire: 'EWcFVZmXnEE',    // Fireplace Crackling
+            waves: 'VQ8FEfhF8nU'    // 10 Hours Ocean Waves
         };
 
-        const bellSound = new Audio("https://upload.wikimedia.org/wikipedia/commons/f/f6/Singing_bowl_strike.ogg");
+        let currentLofiIdx = 0;
+        let players = {};
+        let playerStates = {
+            lofi: -1,
+            rain: -1,
+            fire: -1,
+            waves: -1
+        };
 
-        // Bật chế độ lặp lại vô tận
-        Object.values(audioElements).forEach(audio => { 
-            audio.loop = true;
-            audio.crossOrigin = "anonymous";
-        });
-        bellSound.crossOrigin = "anonymous";
+        // ============ YOUTUBE PLAYER CALLBACK ============
+        function onYouTubeIframeAPIReady() {
+            console.log("YouTube API Ready");
+            
+            // Tạo Player cho Lofi
+            players.lofi = new YT.Player('youtube-lofi', {
+                height: '0',
+                width: '0',
+                videoId: youtubeVideos.lofi[0],
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                },
+                playerVars: {
+                    'controls': 0,
+                    'modestbranding': 1
+                }
+            });
 
-        // Playlist Lofi Chill
-        const lofiPlaylist = [
-            "https://upload.wikimedia.org/wikipedia/commons/c/c9/Kevin_MacLeod_-_Dream_Culture.ogg",
-            "https://upload.wikimedia.org/wikipedia/commons/4/4b/Kevin_MacLeod_-_Luminous_Rain.ogg",
-            "https://upload.wikimedia.org/wikipedia/commons/5/5b/Kevin_MacLeod_-_Sovereign.ogg",
-            "https://upload.wikimedia.org/wikipedia/commons/1/13/Kevin_MacLeod_-_Relaxing_Piano_Music.ogg"
-        ];
-        let currentTrackIdx = 0;
+            // Tạo Player cho Rain
+            players.rain = new YT.Player('youtube-rain', {
+                height: '0',
+                width: '0',
+                videoId: youtubeVideos.rain,
+                events: {
+                    'onStateChange': onPlayerStateChange
+                },
+                playerVars: {
+                    'controls': 0,
+                    'modestbranding': 1
+                }
+            });
 
-        // ============ KHỞI TẠO VOLUME ============
+            // Tạo Player cho Fire
+            players.fire = new YT.Player('youtube-fire', {
+                height: '0',
+                width: '0',
+                videoId: youtubeVideos.fire,
+                events: {
+                    'onStateChange': onPlayerStateChange
+                },
+                playerVars: {
+                    'controls': 0,
+                    'modestbranding': 1
+                }
+            });
+
+            // Tạo Player cho Waves
+            players.waves = new YT.Player('youtube-waves', {
+                height: '0',
+                width: '0',
+                videoId: youtubeVideos.waves,
+                events: {
+                    'onStateChange': onPlayerStateChange
+                },
+                playerVars: {
+                    'controls': 0,
+                    'modestbranding': 1
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log("Player ready");
+        }
+
+        function onPlayerStateChange(event) {
+            // Auto-loop: Nếu video kết thúc, phát lại
+            if (event.data === YT.PlayerState.ENDED) {
+                event.target.seekTo(0);
+                event.target.playVideo();
+            }
+        }
+
+        // ============ KHÔI PHỤC VOLUME TỪ LOCALSTORAGE ============
         const volumeSliders = document.querySelectorAll('.volume-slider');
         const audioToggles = document.querySelectorAll('.audio-toggle');
 
-        // Khôi phục volume từ localStorage hoặc mặc định
         const savedVolumes = JSON.parse(localStorage.getItem('audioVolumes')) || {
-            lofi: 0.5,
+            lofi: 50,
             rain: 0,
             fire: 0,
             waves: 0
         };
 
-        Object.keys(audioElements).forEach(key => {
-            audioElements[key].volume = savedVolumes[key] || 0;
+        Object.keys(savedVolumes).forEach(key => {
             const slider = document.querySelector(`.volume-slider[data-track="${key}"]`);
             if (slider) {
-                slider.value = Math.round((savedVolumes[key] || 0) * 100);
+                slider.value = savedVolumes[key];
+                updateVolumeUI(key, savedVolumes[key]);
             }
         });
+
+        function updateVolumeUI(track, value) {
+            const toggleBtn = document.querySelector(`.audio-toggle[data-track="${track}"]`);
+            if (parseInt(value) > 0) {
+                toggleBtn.classList.remove('opacity-50');
+                toggleBtn.classList.add('audio-active');
+            } else {
+                toggleBtn.classList.add('opacity-50');
+                toggleBtn.classList.remove('audio-active');
+            }
+        }
 
         // ============ XỬ LÝ SLIDER VOLUME ============
         volumeSliders.forEach(slider => {
@@ -343,29 +409,22 @@
                 
                 const trackId = e.target.getAttribute('data-track');
                 const val = parseInt(e.target.value);
-                const volume = val / 100;
-                
-                audioElements[trackId].volume = volume;
                 
                 // Lưu vào localStorage
                 const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
-                volumes[trackId] = volume;
+                volumes[trackId] = val;
                 localStorage.setItem('audioVolumes', JSON.stringify(volumes));
                 
-                const toggleBtn = document.querySelector(`.audio-toggle[data-track="${trackId}"]`);
+                updateVolumeUI(trackId, val);
                 
-                if (val > 0) {
-                    toggleBtn.classList.remove('opacity-50');
-                    toggleBtn.classList.add('audio-active');
-                    
-                    // Phát audio nếu timer đang chạy
-                    if (isRunning && audioElements[trackId].paused) {
-                        audioElements[trackId].play().catch(e => console.log("Play error:", e));
-                    }
-                } else {
-                    toggleBtn.classList.add('opacity-50');
-                    toggleBtn.classList.remove('audio-active');
-                    audioElements[trackId].pause();
+                // Set volume YouTube player (0-100)
+                if (players[trackId]) {
+                    players[trackId].setVolume(val);
+                }
+                
+                // Nếu timer đang chạy và volume > 0, phát
+                if (isRunning && val > 0 && playerStates[trackId] !== YT.PlayerState.PLAYING) {
+                    players[trackId].playVideo();
                 }
             });
         });
@@ -380,59 +439,73 @@
                 const slider = document.querySelector(`.volume-slider[data-track="${trackId}"]`);
                 
                 if (btn.classList.contains('opacity-50')) {
-                    // Bật audio
+                    // Bật
                     btn.classList.remove('opacity-50');
                     btn.classList.add('audio-active');
-                    slider.value = 50; 
-                    audioElements[trackId].volume = 0.5;
+                    slider.value = 50;
                     
-                    // Lưu vào localStorage
                     const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
-                    volumes[trackId] = 0.5;
+                    volumes[trackId] = 50;
                     localStorage.setItem('audioVolumes', JSON.stringify(volumes));
                     
-                    // Phát audio nếu timer đang chạy
-                    if (isRunning) {
-                        audioElements[trackId].play().catch(e => console.log("Play error:", e));
+                    if (players[trackId]) {
+                        players[trackId].setVolume(50);
+                        if (isRunning) {
+                            players[trackId].playVideo();
+                        }
                     }
                 } else {
-                    // Tắt audio
+                    // Tắt
                     btn.classList.add('opacity-50');
                     btn.classList.remove('audio-active');
-                    slider.value = 0; 
-                    audioElements[trackId].volume = 0;
+                    slider.value = 0;
                     
-                    // Lưu vào localStorage
                     const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
                     volumes[trackId] = 0;
                     localStorage.setItem('audioVolumes', JSON.stringify(volumes));
                     
-                    audioElements[trackId].pause();
+                    if (players[trackId]) {
+                        players[trackId].pauseVideo();
+                    }
                 }
             });
         });
 
-        // ============ XỬ LÝ ĐỔI BÀI HÁT ============
-        function playLofiTrack() {
-            const currentVol = document.querySelector('.volume-slider[data-track="lofi"]').value / 100;
-            audioElements.lofi.src = lofiPlaylist[currentTrackIdx];
-            audioElements.lofi.volume = currentVol;
-            
-            if (currentVol > 0) {
-                audioElements.lofi.play().catch(e => console.log("Lofi play error:", e));
-            }
-        }
-
+        // ============ XỬ LÝ ĐỔI BÀI LOFI ============
         document.getElementById('next-track').addEventListener('click', () => {
             initAudioContext();
-            currentTrackIdx = (currentTrackIdx + 1) % lofiPlaylist.length;
-            playLofiTrack();
+            currentLofiIdx = (currentLofiIdx + 1) % youtubeVideos.lofi.length;
+            players.lofi.loadVideoById(youtubeVideos.lofi[currentLofiIdx]);
+            
+            const vol = parseInt(document.querySelector('.volume-slider[data-track="lofi"]').value);
+            players.lofi.setVolume(vol);
+            if (isRunning && vol > 0) {
+                players.lofi.playVideo();
+            }
         });
 
         document.getElementById('prev-track').addEventListener('click', () => {
             initAudioContext();
-            currentTrackIdx = (currentTrackIdx - 1 + lofiPlaylist.length) % lofiPlaylist.length;
-            playLofiTrack();
+            currentLofiIdx = (currentLofiIdx - 1 + youtubeVideos.lofi.length) % youtubeVideos.lofi.length;
+            players.lofi.loadVideoById(youtubeVideos.lofi[currentLofiIdx]);
+            
+            const vol = parseInt(document.querySelector('.volume-slider[data-track="lofi"]').value);
+            players.lofi.setVolume(vol);
+            if (isRunning && vol > 0) {
+                players.lofi.playVideo();
+            }
+        });
+
+        // ============ AUDIO CONTEXT INIT ============
+        let isAudioInitialized = false;
+
+        function initAudioContext() {
+            if (isAudioInitialized) return;
+            isAudioInitialized = true;
+        }
+
+        ['click', 'touchstart', 'keydown'].forEach(event => {
+            document.addEventListener(event, initAudioContext, { once: true });
         });
 
         // ============ QUẢN LÝ TRÍCH DẪN ============
@@ -493,23 +566,22 @@
 
         // ============ PHÁT AUDIO KHI TIMER CHẠY ============
         function startAudio() {
-            // Phát tất cả audio có volume > 0
-            Object.keys(audioElements).forEach(key => {
-                const slider = document.querySelector(`.volume-slider[data-track="${key}"]`);
-                const vol = parseInt(slider.value) / 100;
+            Object.keys(players).forEach(trackId => {
+                const slider = document.querySelector(`.volume-slider[data-track="${trackId}"]`);
+                const vol = parseInt(slider.value);
                 
-                if (vol > 0 && audioElements[key].paused) {
-                    audioElements[key].play().catch(e => console.log(`Error playing ${key}:`, e));
+                if (vol > 0) {
+                    players[trackId].setVolume(vol);
+                    players[trackId].playVideo();
+                    playerStates[trackId] = YT.PlayerState.PLAYING;
                 }
             });
         }
 
-        // ============ DỪNG AUDIO KHI TIMER TẠM DỪNG ============
         function pauseAudio() {
-            Object.keys(audioElements).forEach(key => {
-                if (!audioElements[key].paused) {
-                    audioElements[key].pause();
-                }
+            Object.keys(players).forEach(trackId => {
+                players[trackId].pauseVideo();
+                playerStates[trackId] = YT.PlayerState.PAUSED;
             });
         }
 
@@ -527,7 +599,7 @@
                 // Bắt đầu
                 if (timeRemaining === 0) timeRemaining = timerDuration;
                 
-                startAudio(); // Phát audio khi start
+                startAudio();
                 
                 timerInterval = setInterval(() => {
                     timeRemaining--;
@@ -540,13 +612,8 @@
                         playIcon.classList.add('ml-1');
                         statusDisplay.textContent = "Hoàn thành!";
                         
-                        // Dừng audio và phát chuông
                         pauseAudio();
-                        bellSound.play().catch(e => console.log("Bell error:", e));
-                        
-                        setTimeout(() => {
-                            alert("🔔 Đã hết thời gian! Chúc bạn một ngày an lành và tràn đầy năng lượng.");
-                        }, 500);
+                        alert("🔔 Đã hết thời gian! Chúc bạn một ngày an lành và tràn đầy năng lượng.");
                     }
                 }, 1000);
                 
@@ -622,7 +689,6 @@
             });
         });
 
-        // Đóng modal khi click bên ngoài
         timeModal.addEventListener('click', (e) => {
             if (e.target === timeModal) {
                 closeModal();
