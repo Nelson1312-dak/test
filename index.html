@@ -128,22 +128,11 @@
             opacity: 1 !important;
             background: rgba(255, 255, 255, 0.15) !important;
         }
-
-        /* Hidden YouTube Players */
-        .youtube-player {
-            display: none;
-        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col items-center justify-center">
 
     <div class="bg-animated"></div>
-
-    <!-- Hidden YouTube Players -->
-    <div id="youtube-lofi" class="youtube-player"></div>
-    <div id="youtube-rain" class="youtube-player"></div>
-    <div id="youtube-fire" class="youtube-player"></div>
-    <div id="youtube-waves" class="youtube-player"></div>
 
     <main id="main-app" class="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 h-screen flex flex-col">
         
@@ -272,105 +261,40 @@
         </div>
     </div>
 
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-
     <script>
-        // ============ YOUTUBE PLAYLIST IDs ============
-        // Các YouTube ID của lofi & ambient sounds (hoạt động ở background)
-        const youtubeVideos = {
+        // ============ AUDIO SOURCES (Archive.org - Stable & Free) ============
+        const audioSources = {
             lofi: [
-                'jfKfPfyJRdk',      // Lofi Girl - Lo-Fi Hip Hop Radio
-                'J-_RbZ8m4Y0',      // Piano Lofi
-                'C1KhL69O6NE',      // Chill Lofi Mix
+                // Lofi Playlist
+                'https://archive.org/download/LofiHipHopRadioV1/01%20-%20Lofi%20Hip%20Hop%20Beat%201.mp3',
+                'https://archive.org/download/LofiHipHopRadioV1/02%20-%20Lofi%20Hip%20Hop%20Beat%202.mp3',
+                'https://archive.org/download/LofiHipHopRadioV1/03%20-%20Lofi%20Hip%20Hop%20Beat%203.mp3',
             ],
-            rain: 'nKHv1zJq3gI',    // 10 Hours Rain Sounds
-            fire: 'EWcFVZmXnEE',    // Fireplace Crackling
-            waves: 'VQ8FEfhF8nU'    // 10 Hours Ocean Waves
+            rain: 'https://archive.org/download/RainSounds_201308/Rain.mp3',
+            fire: 'https://archive.org/download/CampfireSounds/Campfire.mp3',
+            waves: 'https://archive.org/download/OceanWavesSounds/Ocean_Waves.mp3'
         };
+
+        // ============ KHỞI TẠO AUDIO ELEMENTS ============
+        const audioElements = {
+            lofi: new Audio(),
+            rain: new Audio(audioSources.rain),
+            fire: new Audio(audioSources.fire),
+            waves: new Audio(audioSources.waves)
+        };
+
+        // Bật loop cho ambient sounds
+        audioElements.rain.loop = true;
+        audioElements.fire.loop = true;
+        audioElements.waves.loop = true;
+        audioElements.lofi.loop = true;
+
+        // CORS
+        Object.values(audioElements).forEach(audio => {
+            audio.crossOrigin = 'anonymous';
+        });
 
         let currentLofiIdx = 0;
-        let players = {};
-        let playerStates = {
-            lofi: -1,
-            rain: -1,
-            fire: -1,
-            waves: -1
-        };
-
-        // ============ YOUTUBE PLAYER CALLBACK ============
-        function onYouTubeIframeAPIReady() {
-            console.log("YouTube API Ready");
-            
-            // Tạo Player cho Lofi
-            players.lofi = new YT.Player('youtube-lofi', {
-                height: '0',
-                width: '0',
-                videoId: youtubeVideos.lofi[0],
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                },
-                playerVars: {
-                    'controls': 0,
-                    'modestbranding': 1
-                }
-            });
-
-            // Tạo Player cho Rain
-            players.rain = new YT.Player('youtube-rain', {
-                height: '0',
-                width: '0',
-                videoId: youtubeVideos.rain,
-                events: {
-                    'onStateChange': onPlayerStateChange
-                },
-                playerVars: {
-                    'controls': 0,
-                    'modestbranding': 1
-                }
-            });
-
-            // Tạo Player cho Fire
-            players.fire = new YT.Player('youtube-fire', {
-                height: '0',
-                width: '0',
-                videoId: youtubeVideos.fire,
-                events: {
-                    'onStateChange': onPlayerStateChange
-                },
-                playerVars: {
-                    'controls': 0,
-                    'modestbranding': 1
-                }
-            });
-
-            // Tạo Player cho Waves
-            players.waves = new YT.Player('youtube-waves', {
-                height: '0',
-                width: '0',
-                videoId: youtubeVideos.waves,
-                events: {
-                    'onStateChange': onPlayerStateChange
-                },
-                playerVars: {
-                    'controls': 0,
-                    'modestbranding': 1
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            console.log("Player ready");
-        }
-
-        function onPlayerStateChange(event) {
-            // Auto-loop: Nếu video kết thúc, phát lại
-            if (event.data === YT.PlayerState.ENDED) {
-                event.target.seekTo(0);
-                event.target.playVideo();
-            }
-        }
 
         // ============ KHÔI PHỤC VOLUME TỪ LOCALSTORAGE ============
         const volumeSliders = document.querySelectorAll('.volume-slider');
@@ -388,6 +312,9 @@
             if (slider) {
                 slider.value = savedVolumes[key];
                 updateVolumeUI(key, savedVolumes[key]);
+                if (audioElements[key]) {
+                    audioElements[key].volume = savedVolumes[key] / 100;
+                }
             }
         });
 
@@ -409,6 +336,9 @@
                 
                 const trackId = e.target.getAttribute('data-track');
                 const val = parseInt(e.target.value);
+                const volume = val / 100;
+                
+                audioElements[trackId].volume = volume;
                 
                 // Lưu vào localStorage
                 const volumes = JSON.parse(localStorage.getItem('audioVolumes')) || {};
@@ -417,14 +347,9 @@
                 
                 updateVolumeUI(trackId, val);
                 
-                // Set volume YouTube player (0-100)
-                if (players[trackId]) {
-                    players[trackId].setVolume(val);
-                }
-                
                 // Nếu timer đang chạy và volume > 0, phát
-                if (isRunning && val > 0 && playerStates[trackId] !== YT.PlayerState.PLAYING) {
-                    players[trackId].playVideo();
+                if (isRunning && val > 0 && audioElements[trackId].paused) {
+                    audioElements[trackId].play().catch(e => console.log("Play error:", trackId, e));
                 }
             });
         });
@@ -448,11 +373,9 @@
                     volumes[trackId] = 50;
                     localStorage.setItem('audioVolumes', JSON.stringify(volumes));
                     
-                    if (players[trackId]) {
-                        players[trackId].setVolume(50);
-                        if (isRunning) {
-                            players[trackId].playVideo();
-                        }
+                    audioElements[trackId].volume = 0.5;
+                    if (isRunning) {
+                        audioElements[trackId].play().catch(e => console.log("Play error:", trackId, e));
                     }
                 } else {
                     // Tắt
@@ -464,36 +387,32 @@
                     volumes[trackId] = 0;
                     localStorage.setItem('audioVolumes', JSON.stringify(volumes));
                     
-                    if (players[trackId]) {
-                        players[trackId].pauseVideo();
-                    }
+                    audioElements[trackId].pause();
                 }
             });
         });
 
         // ============ XỬ LÝ ĐỔI BÀI LOFI ============
+        function playLofiTrack() {
+            const vol = parseInt(document.querySelector('.volume-slider[data-track="lofi"]').value);
+            audioElements.lofi.src = audioSources.lofi[currentLofiIdx];
+            audioElements.lofi.volume = vol / 100;
+            
+            if (vol > 0 && isRunning) {
+                audioElements.lofi.play().catch(e => console.log("Lofi play error:", e));
+            }
+        }
+
         document.getElementById('next-track').addEventListener('click', () => {
             initAudioContext();
-            currentLofiIdx = (currentLofiIdx + 1) % youtubeVideos.lofi.length;
-            players.lofi.loadVideoById(youtubeVideos.lofi[currentLofiIdx]);
-            
-            const vol = parseInt(document.querySelector('.volume-slider[data-track="lofi"]').value);
-            players.lofi.setVolume(vol);
-            if (isRunning && vol > 0) {
-                players.lofi.playVideo();
-            }
+            currentLofiIdx = (currentLofiIdx + 1) % audioSources.lofi.length;
+            playLofiTrack();
         });
 
         document.getElementById('prev-track').addEventListener('click', () => {
             initAudioContext();
-            currentLofiIdx = (currentLofiIdx - 1 + youtubeVideos.lofi.length) % youtubeVideos.lofi.length;
-            players.lofi.loadVideoById(youtubeVideos.lofi[currentLofiIdx]);
-            
-            const vol = parseInt(document.querySelector('.volume-slider[data-track="lofi"]').value);
-            players.lofi.setVolume(vol);
-            if (isRunning && vol > 0) {
-                players.lofi.playVideo();
-            }
+            currentLofiIdx = (currentLofiIdx - 1 + audioSources.lofi.length) % audioSources.lofi.length;
+            playLofiTrack();
         });
 
         // ============ AUDIO CONTEXT INIT ============
@@ -566,22 +485,22 @@
 
         // ============ PHÁT AUDIO KHI TIMER CHẠY ============
         function startAudio() {
-            Object.keys(players).forEach(trackId => {
+            Object.keys(audioElements).forEach(trackId => {
                 const slider = document.querySelector(`.volume-slider[data-track="${trackId}"]`);
                 const vol = parseInt(slider.value);
                 
-                if (vol > 0) {
-                    players[trackId].setVolume(vol);
-                    players[trackId].playVideo();
-                    playerStates[trackId] = YT.PlayerState.PLAYING;
+                if (vol > 0 && audioElements[trackId].paused) {
+                    audioElements[trackId].volume = vol / 100;
+                    audioElements[trackId].play().catch(e => console.log("Play error:", trackId, e));
                 }
             });
         }
 
         function pauseAudio() {
-            Object.keys(players).forEach(trackId => {
-                players[trackId].pauseVideo();
-                playerStates[trackId] = YT.PlayerState.PAUSED;
+            Object.keys(audioElements).forEach(trackId => {
+                if (!audioElements[trackId].paused) {
+                    audioElements[trackId].pause();
+                }
             });
         }
 
