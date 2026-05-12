@@ -20,8 +20,12 @@
         .bg-aurora{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#001a0e,#003320,#0a4a1a,#052a30,#001a2e);background-size:400% 400%;animation:gradShift 18s ease infinite}
         .bg-sunset{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a0533,#3d0b00,#7c1900,#3d0b00,#1a0533,#0d0221);background-size:400% 400%;animation:gradShift 22s ease infinite}
         .bg-ocean{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#000428,#004e92,#000428,#001a4e,#004e92);background-size:400% 400%;animation:gradShift 16s ease infinite}
+        .bg-sakura{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a0a14,#3d1a2e,#6b2d4a,#3d1a2e,#1a0a14,#2d0f24);background-size:400% 400%;animation:gradShift 24s ease infinite}
+        .bg-zen{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0a0a0f,#111118,#0d1117,#0a0f1a,#080d14);background-size:400% 400%;animation:gradShift 30s ease infinite}
+        .bg-neon{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#050510,#0a0520,#05102a,#020815,#08051a);background-size:400% 400%;animation:gradShift 12s ease infinite}
 
         #star-canvas{position:fixed;inset:0;z-index:0;display:none}
+        @keyframes zenBreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.3}50%{transform:translate(-50%,-50%) scale(1.4);opacity:0.7}}
         #bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,0.12);pointer-events:none}
 
         .glass{background:rgba(15,23,42,0.42);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5)}
@@ -72,9 +76,12 @@
                 <h2 class="text-xl font-space font-bold tracking-widest text-white/80 uppercase">ZenFlow</h2>
                 <p id="quote-display" class="mt-2 text-xs md:text-sm text-slate-200/70 font-light italic h-8 transition-opacity duration-500"></p>
             </div>
-            <button id="bg-picker-btn" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-white/70 hover:text-white" title="Đổi hình nền">
-                <i class="ph ph-image text-xl"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <span id="bg-label" class="text-white/30 text-xs font-light tracking-wide hidden md:block"></span>
+                <button id="bg-next-btn" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-white/70 hover:text-white transition-all" title="Chuyển hình nền">
+                    <i class="ph ph-arrow-circle-right text-xl"></i>
+                </button>
+            </div>
         </header>
 
         <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10 w-full">
@@ -250,12 +257,32 @@
         'photo-rain':     'https://images.unsplash.com/photo-1428592953211-077101b2021b?auto=format&fit=crop&w=1920&q=80',
     };
 
+    // Ordered list for next-bg cycling
+    const bgList = [
+        {id:'photo-stars',    label:'Bầu trời sao'},
+        {id:'photo-forest',   label:'Rừng đêm'},
+        {id:'photo-mountain', label:'Núi tuyết'},
+        {id:'photo-beach',    label:'Bãi biển'},
+        {id:'photo-cafe',     label:'Quán cafe'},
+        {id:'photo-rain',     label:'Mưa đêm'},
+        {id:'anim-galaxy',    label:'Galaxy ✦'},
+        {id:'anim-aurora',    label:'Cực quang'},
+        {id:'anim-sunset',    label:'Hoàng hôn'},
+        {id:'anim-ocean',     label:'Đại dương'},
+        {id:'anim-stars',     label:'Sao rơi ✦'},
+        {id:'anim-sakura',    label:'Sakura ✦'},
+        {id:'anim-zen',       label:'Zen Dark'},
+        {id:'anim-neon',      label:'Neon City ✦'},
+    ];
+    let currentBgIdx = 0;
+
     let starAnimFrame = null;
+    let neonAnimFrame = null;
     const bgMain = document.getElementById('bg-main');
     const starCanvas = document.getElementById('star-canvas');
     const starCtx = starCanvas.getContext('2d');
 
-    function clearParticles() { document.querySelectorAll('.particle').forEach(p => p.remove()); }
+    function clearParticles() { document.querySelectorAll('.particle, #zen-orb').forEach(p => p.remove()); }
 
     function spawnParticles(c1, c2) {
         clearParticles();
@@ -304,6 +331,7 @@
         if (starAnimFrame) { cancelAnimationFrame(starAnimFrame); starAnimFrame=null; }
         starCanvas.style.display = 'none';
         clearParticles();
+        if (neonAnimFrame) { cancelAnimationFrame(neonAnimFrame); neonAnimFrame=null; }
 
         bgMain.className = '';
         bgMain.style.cssText = '';
@@ -325,12 +353,118 @@
             bgMain.style.cssText = 'display:none';
             starCanvas.style.display = 'block';
             resizeStarCanvas(); initStars(); animateStars();
+        } else if (bgId === 'anim-sakura') {
+            bgMain.className = 'bg-sakura';
+            spawnSakura();
+        } else if (bgId === 'anim-zen') {
+            bgMain.className = 'bg-zen';
+            spawnBreathingOrb();
+        } else if (bgId === 'anim-neon') {
+            bgMain.className = 'bg-neon';
+            bgMain.style.cssText = '';
+            bgMain.className = 'bg-neon';
+            starCanvas.style.display = 'block';
+            resizeStarCanvas(); animateNeon();
         }
+
+        // Update label
+        const found = bgList.find(b => b.id === bgId);
+        const lbl = document.getElementById('bg-label');
+        if (lbl && found) { lbl.textContent = found.label; }
+
+        // Update currentBgIdx
+        const idx = bgList.findIndex(b => b.id === bgId);
+        if (idx >= 0) currentBgIdx = idx;
 
         document.querySelectorAll('.bg-option').forEach(btn => btn.classList.toggle('active', btn.dataset.bg === bgId));
     }
 
     window.addEventListener('resize', () => { resizeStarCanvas(); initStars(); });
+
+    // --- Sakura petals ---
+    function spawnSakura() {
+        clearParticles();
+        for (let i = 0; i < 25; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 8 + 4;
+            const colors = ['#ffb7c5','#ff8fa3','#ffccd5','#ffc8dd','#e8a0bf'];
+            p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;border-radius:${Math.random()>0.5?'50% 0':'50%'};background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*10}s;opacity:0`;
+            document.body.appendChild(p);
+        }
+    }
+
+    // --- Breathing orb for Zen ---
+    function spawnBreathingOrb() {
+        clearParticles();
+        const orb = document.createElement('div');
+        orb.id = 'zen-orb';
+        orb.style.cssText = `position:fixed;top:50%;left:50%;width:300px;height:300px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(60,60,120,0.15),transparent);border:1px solid rgba(100,100,200,0.1);animation:zenBreath 6s ease-in-out infinite;z-index:1;pointer-events:none`;
+        document.body.appendChild(orb);
+        const orb2 = document.createElement('div');
+        orb2.style.cssText = `position:fixed;top:50%;left:50%;width:500px;height:500px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(40,40,80,0.08),transparent);border:1px solid rgba(80,80,160,0.06);animation:zenBreath 6s ease-in-out infinite 1s;z-index:1;pointer-events:none`;
+        document.body.appendChild(orb2);
+    }
+
+    // --- Neon city canvas ---
+    let neonAnimFrame = null;
+    function animateNeon() {
+        const ctx = starCtx;
+        let t = 0;
+        const neonColors = ['#ff00ff','#00ffff','#ff0080','#8000ff','#0080ff','#ff8000'];
+        function draw() {
+            ctx.fillStyle = 'rgba(5,5,16,0.15)';
+            ctx.fillRect(0,0,starCanvas.width,starCanvas.height);
+            t += 0.008;
+            // Neon grid lines
+            for (let i = 0; i < 6; i++) {
+                const x = (i / 6) * starCanvas.width + Math.sin(t + i) * 20;
+                ctx.beginPath();
+                ctx.moveTo(x, 0); ctx.lineTo(x, starCanvas.height);
+                ctx.strokeStyle = `rgba(${i%2?0:255},${i%3?0:200},255,0.04)`;
+                ctx.lineWidth = 1; ctx.stroke();
+            }
+            // Floating neon dots
+            for (let i = 0; i < 3; i++) {
+                const x = starCanvas.width * (0.2 + i * 0.3) + Math.sin(t * 0.7 + i * 2) * 60;
+                const y = starCanvas.height * 0.5 + Math.cos(t * 0.5 + i) * 80;
+                const r = 2 + Math.abs(Math.sin(t + i)) * 3;
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+                ctx.fillStyle = neonColors[(i + Math.floor(t)) % neonColors.length];
+                ctx.fill();
+                // Glow ring
+                ctx.beginPath(); ctx.arc(x, y, r * 4, 0, Math.PI*2);
+                ctx.strokeStyle = neonColors[(i + Math.floor(t)) % neonColors.length].replace('ff','33');
+                ctx.lineWidth = 1; ctx.stroke();
+            }
+            // Stars
+            if (stars.length < 60) initStars();
+            stars.slice(0,60).forEach(s => {
+                s.alpha += s.speed * (Math.random() > 0.5 ? 1 : -1);
+                s.alpha = Math.max(0.05, Math.min(0.6, s.alpha));
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.7, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(180,180,255,${s.alpha})`; ctx.fill();
+            });
+            neonAnimFrame = requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    // Next background button
+    const bgNextBtn = document.getElementById('bg-next-btn');
+    if (bgNextBtn) {
+        bgNextBtn.addEventListener('click', () => {
+            currentBgIdx = (currentBgIdx + 1) % bgList.length;
+            applyBackground(bgList[currentBgIdx].id);
+            // Flash label
+            const lbl = document.getElementById('bg-label');
+            if (lbl) { lbl.style.opacity='1'; clearTimeout(lbl._t); lbl._t=setTimeout(()=>lbl.style.opacity='0.3',2000); }
+            // Rotate icon briefly
+            bgNextBtn.style.transform = 'rotate(360deg)';
+            bgNextBtn.style.transition = 'transform 0.4s ease';
+            setTimeout(() => { bgNextBtn.style.transform=''; bgNextBtn.style.transition=''; }, 400);
+        });
+    }
 
     const bgModal = document.getElementById('bg-modal');
     document.getElementById('bg-picker-btn').addEventListener('click', () => bgModal.classList.remove('opacity-0','pointer-events-none'));
@@ -339,7 +473,9 @@
     document.querySelectorAll('.bg-option').forEach(btn => btn.addEventListener('click', () => applyBackground(btn.dataset.bg)));
 
     resizeStarCanvas(); initStars();
-    applyBackground(localStorage.getItem('zenflow-bg') || 'photo-stars');
+    const _savedBg = localStorage.getItem('zenflow-bg') || 'photo-stars';
+    currentBgIdx = Math.max(0, bgList.findIndex(b => b.id === _savedBg));
+    applyBackground(_savedBg);
 
     // ============================================================
     // WEB AUDIO — AMBIENT SOUNDS (synthetic, no files needed)
@@ -375,17 +511,37 @@
 
     function createFire(vol) {
         const ctx = getCtx();
-        const src = makeNoise(ctx, 2);
-        const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=700;
-        const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=350;
-        const gain = ctx.createGain(); gain.gain.value = vol * 0.45;
-        // LFO for crackle
-        const lfo = ctx.createOscillator(); lfo.frequency.value=5+Math.random()*3;
-        const lfoG = ctx.createGain(); lfoG.gain.value=0.12;
-        lfo.connect(lfoG); lfoG.connect(gain.gain);
-        src.connect(lp1); lp1.connect(lp2); lp2.connect(gain); gain.connect(ctx.destination);
-        src.start(); lfo.start();
-        return { gain, stop(){ try{src.stop();lfo.stop()}catch(e){} } };
+        // Layer 1: base rumble (low noise)
+        const src1 = makeNoise(ctx, 2);
+        const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=500;
+        const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=250;
+        const g1 = ctx.createGain(); g1.gain.value = vol * 0.4;
+        src1.connect(lp1); lp1.connect(lp2); lp2.connect(g1); g1.connect(ctx.destination);
+        // Layer 2: crackle (mid noise burst via separate gain modulation)
+        const src2 = makeNoise(ctx, 1);
+        const hp = ctx.createBiquadFilter(); hp.type='bandpass'; hp.frequency.value=1200; hp.Q.value=0.8;
+        const g2 = ctx.createGain(); g2.gain.value = 0;
+        src2.connect(hp); hp.connect(g2); g2.connect(ctx.destination);
+        // Simulate random crackles via setValueAtTime scheduling
+        const masterGain = ctx.createGain(); masterGain.gain.value = vol;
+        function scheduleCrackles() {
+            const now = ctx.currentTime;
+            for (let i = 0; i < 8; i++) {
+                const t = now + Math.random() * 1.5;
+                const amp = Math.random() * vol * 0.3;
+                g2.gain.setValueAtTime(amp, t);
+                g2.gain.setValueAtTime(0, t + 0.04 + Math.random() * 0.06);
+            }
+        }
+        scheduleCrackles();
+        const crackleTimer = setInterval(scheduleCrackles, 1200);
+        src1.start(); src2.start();
+        return {
+            gain: g1,
+            _g2: g2, _vol: vol,
+            setVol(v) { g1.gain.setTargetAtTime(v*0.4, ctx.currentTime, 0.1); },
+            stop(){ clearInterval(crackleTimer); try{src1.stop();src2.stop()}catch(e){} }
+        };
     }
 
     function createWaves(vol) {
@@ -410,7 +566,9 @@
 
     function setVol(sound, vol) {
         const n = ambientNodes[sound];
-        if (n) n.gain.gain.setTargetAtTime(vol * {rain:0.55,fire:0.45,waves:0.65}[sound], getCtx().currentTime, 0.1);
+        if (!n) return;
+        if (sound === 'fire' && n.setVol) { n.setVol(vol); return; }
+        n.gain.gain.setTargetAtTime(vol * {rain:0.55,waves:0.65}[sound] || vol*0.5, getCtx().currentTime, 0.1);
     }
 
     document.querySelectorAll('.ambient-slider').forEach(slider => {
