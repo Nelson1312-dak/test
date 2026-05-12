@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZenFlow</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -51,10 +51,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 .amb-active{opacity:1!important;background:rgba(255,255,255,0.14)!important}
 
 /* ---- SCROLLBAR ---- */
-.scr::-webkit-scrollbar{width:0px; /* Ẩn scrollbar trên mobile */}
-@media (min-width: 768px) {
-  .scr::-webkit-scrollbar{width:5px}
-}
+.scr::-webkit-scrollbar{width:5px}
 .scr::-webkit-scrollbar-track{background:rgba(255,255,255,0.04);border-radius:8px}
 .scr::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:8px}
 
@@ -72,7 +69,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 /* ---- MODAL ---- */
 .modal-wrap{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.25s}
 .modal-wrap.open{opacity:1;pointer-events:all}
-.modal-box{transform:scale(0.95);transition:transform 0.25s; max-height: 90vh; overflow-y: auto;}
+.modal-box{transform:scale(0.95);transition:transform 0.25s}
 .modal-wrap.open .modal-box{transform:scale(1)}
 </style>
 </head>
@@ -83,150 +80,127 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 <div id="bg-overlay"></div>
 <div id="yt-player"></div>
 
-<!-- Sử dụng h-[100dvh] và overflow-hidden để fix lỗi giao diện trên mobile -->
-<main class="relative z-10 w-full max-w-6xl mx-auto px-4 py-2 md:py-6 h-[100dvh] flex flex-col overflow-hidden">
+<main class="relative z-10 w-full max-w-6xl mx-auto px-4 py-6 h-screen flex flex-col">
 
-  <!-- HEADER (Giữ nguyên cấu trúc của bạn) -->
-  <header class="shrink-0 py-3 md:py-4">
-    <!-- Desktop: 3-col grid, title truly centered -->
-    <div class="hidden md:grid md:grid-cols-3 items-start">
-      <div></div>
-      <div class="text-center pointer-events-none select-none px-2">
-        <h2 class="text-xl font-bold tracking-widest text-white/90 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
-        <p id="quote" class="mt-1.5 text-xs text-white/55 italic transition-opacity duration-500 leading-relaxed mx-auto" style="max-width:400px;min-height:2.5rem"></p>
-      </div>
-      <div class="flex items-center justify-end gap-2 pt-1">
-        <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1"></span>
-        <button id="btn-next-bg" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/80 hover:text-white" title="Chuyển bg">
-          <i class="ph ph-arrow-clockwise text-base"></i>
-        </button>
-        <button id="btn-bg-list" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/80 hover:text-white" title="Danh sách hình nền">
-          <i class="ph ph-images text-base"></i>
-        </button>
-        <button id="btn-add-playlist" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/80 hover:text-white" title="Thêm vào playlist">
-          <i class="ph ph-playlist text-base"></i>
-        </button>
-      </div>
+  <!-- HEADER -->
+  <header class="relative flex items-center justify-center py-4" style="min-height:64px">
+    <!-- Perfectly centered title + quote -->
+    <div class="text-center pointer-events-none select-none">
+      <h2 class="text-xl font-bold tracking-widest text-white/75 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
+      <p id="quote" class="mt-1.5 text-xs text-white/55 italic transition-opacity duration-500 leading-relaxed" style="max-width:520px;min-height:2rem"></p>
     </div>
-    <!-- Mobile: title left, buttons right -->
-    <div class="flex md:hidden items-center justify-between">
-      <h2 class="text-lg font-bold tracking-widest text-white/90 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
-      <div class="flex items-center gap-1.5">
-        <button id="btn-next-bg-m" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white">
-          <i class="ph ph-arrow-clockwise text-sm"></i>
-        </button>
-        <button id="btn-bg-list-m" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white">
-          <i class="ph ph-images text-sm"></i>
-        </button>
-        <button id="btn-add-playlist-m" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white">
-          <i class="ph ph-playlist text-sm"></i>
-        </button>
-      </div>
+    <!-- Buttons pinned to right -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+      <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1 hidden md:block"></span>
+      <button id="btn-next-bg" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Chuyển bg tiếp theo">
+        <i class="ph ph-arrow-clockwise text-base"></i>
+      </button>
+      <button id="btn-bg-list" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Danh sách hình nền">
+        <i class="ph ph-images text-base"></i>
+      </button>
+      <button id="btn-add-playlist" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Thêm vào playlist">
+        <i class="ph ph-playlist text-base"></i>
+      </button>
     </div>
-    <!-- Quote hidden on mobile -->
-    <p id="quote-m" style="display:none"></p>
   </header>
 
-  <!-- BODY CÓ THỂ CUỘN TRÊN MOBILE -->
-  <div class="flex-1 w-full overflow-y-auto scr pb-8 pt-4 md:pt-0">
-    <div class="flex flex-col lg:flex-row items-center justify-start lg:justify-center gap-6 lg:gap-10 min-h-full">
+  <!-- BODY -->
+  <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10">
 
-      <!-- TIMER -->
-      <div class="glass rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col items-center w-full max-w-md shrink-0">
-        <div class="relative w-56 h-56 md:w-72 md:h-72 flex items-center justify-center">
-          <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-            <circle class="ring-track" stroke-width="2" cx="50" cy="50" r="47" fill="none"/>
-            <circle id="ring" class="ring-fill" stroke-width="2" cx="50" cy="50" r="47" fill="none" stroke-dasharray="295.3" stroke-dashoffset="0"/>
-          </svg>
-          <div class="z-10 text-center">
-            <div id="t-display" class="text-5xl md:text-6xl font-bold tracking-tighter" style="font-family:'Space Grotesk',sans-serif">25:00</div>
-            <div id="t-status" class="text-xs uppercase tracking-widest text-white/50 mt-1.5 font-semibold">Sẵn sàng</div>
+    <!-- TIMER -->
+    <div class="glass rounded-[3rem] p-8 md:p-10 flex flex-col items-center w-full max-w-md">
+      <div class="relative w-60 h-60 md:w-72 md:h-72 flex items-center justify-center">
+        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+          <circle class="ring-track" stroke-width="2" cx="50" cy="50" r="47" fill="none"/>
+          <circle id="ring" class="ring-fill" stroke-width="2" cx="50" cy="50" r="47" fill="none" stroke-dasharray="295.3" stroke-dashoffset="0"/>
+        </svg>
+        <div class="z-10 text-center">
+          <div id="t-display" class="text-5xl md:text-6xl font-bold tracking-tighter" style="font-family:'Space Grotesk',sans-serif">25:00</div>
+          <div id="t-status" class="text-xs uppercase tracking-widest text-white/50 mt-1.5 font-semibold">Sẵn sàng</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-6 mt-8">
+        <button id="btn-reset" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-arrow-counter-clockwise text-2xl"></i></button>
+        <button id="btn-play" class="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_24px_rgba(255,255,255,0.25)]">
+          <i id="play-icon" class="ph-fill ph-play text-3xl ml-1"></i>
+        </button>
+        <button id="btn-timer" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-timer text-2xl"></i></button>
+      </div>
+    </div>
+
+    <!-- MIXER -->
+    <div class="glass rounded-3xl p-5 w-full max-w-sm flex flex-col gap-4">
+      <h3 class="text-sm font-semibold tracking-wide text-white/80" style="font-family:'Space Grotesk',sans-serif">Không gian âm thanh</h3>
+
+      <!-- YouTube -->
+      <div class="rounded-2xl border border-white/10 bg-white/4 p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <span class="yt-pill"><i class="ph-fill ph-youtube-logo text-xs"></i> YouTube</span>
+          <div class="flex gap-0.5 text-white/60">
+            <button id="yt-prev" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-back text-sm"></i></button>
+            <button id="yt-pp" class="gbtn p-1.5 rounded-lg hover:text-white"><i id="yt-icon" class="ph-fill ph-play text-sm"></i></button>
+            <button id="yt-next" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-forward text-sm"></i></button>
           </div>
         </div>
-        <div class="flex items-center gap-5 md:gap-6 mt-6 md:mt-8">
-          <button id="btn-reset" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-arrow-counter-clockwise text-2xl"></i></button>
-          <button id="btn-play" class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_24px_rgba(255,255,255,0.25)]">
-            <i id="play-icon" class="ph-fill ph-play text-2xl md:text-3xl ml-1"></i>
+        <button id="yt-open-pl" class="flex items-center gap-2.5 hover:bg-white/5 rounded-xl p-1 -m-1 transition-colors group w-full text-left">
+          <img id="yt-thumb" src="https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white/10" alt="">
+          <div class="flex-1 min-w-0">
+            <p id="yt-title" class="text-xs font-medium text-white/85 truncate">Chọn bài hát...</p>
+            <p id="yt-ch" class="text-xs text-white/35 truncate mt-0.5">YouTube Music</p>
+          </div>
+          <i class="ph ph-caret-right text-white/25 group-hover:text-white/50 flex-shrink-0 text-sm"></i>
+        </button>
+        <div id="yt-prog-wrap"><div id="yt-prog-fill"></div></div>
+        <div class="flex items-center gap-2.5">
+          <button id="yt-mute-btn" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-red-300 flex-shrink-0">
+            <i id="yt-mute-icon" class="ph-fill ph-speaker-high text-sm"></i>
           </button>
-          <button id="btn-timer" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-timer text-2xl"></i></button>
+          <input type="range" id="yt-vol" min="0" max="100" value="70">
         </div>
       </div>
 
-      <!-- MIXER -->
-      <div class="glass rounded-[2rem] md:rounded-3xl p-5 w-full max-w-md lg:max-w-sm flex flex-col gap-4 shrink-0">
-        <h3 class="text-sm font-semibold tracking-wide text-white/80" style="font-family:'Space Grotesk',sans-serif">Không gian âm thanh</h3>
-
-        <!-- YouTube -->
-        <div class="rounded-2xl border border-white/10 bg-white/4 p-3.5 flex flex-col gap-2.5">
-          <div class="flex items-center justify-between">
-            <span class="yt-pill"><i class="ph-fill ph-youtube-logo text-xs"></i> YouTube</span>
-            <div class="flex gap-0.5 text-white/60">
-              <button id="yt-prev" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-back text-sm"></i></button>
-              <button id="yt-pp" class="gbtn p-1.5 rounded-lg hover:text-white"><i id="yt-icon" class="ph-fill ph-play text-sm"></i></button>
-              <button id="yt-next" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-forward text-sm"></i></button>
-            </div>
-          </div>
-          <button id="yt-open-pl" class="flex items-center gap-2.5 hover:bg-white/5 rounded-xl p-1 -m-1 transition-colors group w-full text-left">
-            <img id="yt-thumb" src="https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white/10" alt="">
-            <div class="flex-1 min-w-0">
-              <p id="yt-title" class="text-xs font-medium text-white/85 truncate">Chọn bài hát...</p>
-              <p id="yt-ch" class="text-xs text-white/35 truncate mt-0.5">YouTube Music</p>
-            </div>
-            <i class="ph ph-caret-right text-white/25 group-hover:text-white/50 flex-shrink-0 text-sm"></i>
-          </button>
-          <div id="yt-prog-wrap" class="mt-1"><div id="yt-prog-fill"></div></div>
-          <div class="flex items-center gap-2.5 mt-1">
-            <button id="yt-mute-btn" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-red-300 flex-shrink-0">
-              <i id="yt-mute-icon" class="ph-fill ph-speaker-high text-sm"></i>
-            </button>
-            <input type="range" id="yt-vol" min="0" max="100" value="70">
-          </div>
-        </div>
-
-        <!-- Rain -->
-        <div class="flex items-center gap-3.5">
-          <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-blue-300 amb-btn opacity-50 flex-shrink-0" data-s="rain"><i class="ph-fill ph-cloud-rain text-xl"></i></button>
-          <div class="flex-1"><div class="text-xs text-white/45 mb-1.5 font-medium">Tiếng Mưa</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="rain"></div>
-        </div>
-        <!-- Fire -->
-        <div class="flex items-center gap-3.5">
-          <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-orange-400 amb-btn opacity-50 flex-shrink-0" data-s="fire"><i class="ph-fill ph-fire text-xl"></i></button>
-          <div class="flex-1"><div class="text-xs text-white/45 mb-1.5 font-medium">Lửa Trại</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="fire"></div>
-        </div>
-        <!-- Waves -->
-        <div class="flex items-center gap-3.5">
-          <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-cyan-300 amb-btn opacity-50 flex-shrink-0" data-s="waves"><i class="ph-fill ph-waves text-xl"></i></button>
-          <div class="flex-1"><div class="text-xs text-white/45 mb-1.5 font-medium">Sóng Biển</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="waves"></div>
-        </div>
+      <!-- Rain -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-blue-300 amb-btn opacity-50 flex-shrink-0" data-s="rain"><i class="ph-fill ph-cloud-rain text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Tiếng Mưa</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="rain"></div>
       </div>
-      
+      <!-- Fire -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-orange-400 amb-btn opacity-50 flex-shrink-0" data-s="fire"><i class="ph-fill ph-fire text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Lửa Trại</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="fire"></div>
+      </div>
+      <!-- Waves -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-cyan-300 amb-btn opacity-50 flex-shrink-0" data-s="waves"><i class="ph-fill ph-waves text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Sóng Biển</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="waves"></div>
+      </div>
     </div>
   </div>
 
-  <footer class="text-center py-2 text-white/20 text-xs shrink-0 hidden md:block">Space · play/pause &nbsp;·&nbsp; R · reset</footer>
+  <footer class="text-center py-3 text-white/20 text-xs">Space · play/pause &nbsp;·&nbsp; R · reset</footer>
 </main>
 
 <!-- TIME MODAL -->
 <div id="modal-time" class="modal-wrap">
-  <div class="glass modal-box rounded-2xl p-6 md:p-8 max-w-sm w-full mx-4 scr">
+  <div class="glass modal-box rounded-2xl p-8 max-w-sm w-full mx-4">
     <h3 class="text-xl mb-6 text-center" style="font-family:'Space Grotesk',sans-serif">Chọn thời gian</h3>
     <div class="mb-6">
       <div class="flex justify-between text-white/55 text-sm mb-2"><span>1p</span><span id="time-val" class="font-semibold text-white">25 phút</span><span>180p</span></div>
       <input type="range" id="time-sl" min="1" max="180" value="25">
     </div>
     <div class="grid grid-cols-2 gap-3">
-      <button class="gbtn py-3 rounded-xl text-sm t-preset font-medium" data-t="10">10 Phút</button>
-      <button class="gbtn py-3 rounded-xl text-sm t-preset font-medium" data-t="30">30 Phút</button>
-      <button class="gbtn py-3 rounded-xl text-sm t-preset font-medium" data-t="60">1 Giờ</button>
-      <button class="gbtn py-3 rounded-xl text-sm t-preset font-medium" data-t="180">3 Giờ</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="10">10 Phút</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="30">30 Phút</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="60">1 Giờ</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="180">3 Giờ</button>
     </div>
-    <button id="time-close" class="mt-6 w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 transition-colors text-sm font-medium">Lưu & Đóng</button>
+    <button id="time-close" class="mt-5 w-full py-3 rounded-xl bg-white/8 hover:bg-white/15 transition-colors text-sm">Lưu & Đóng</button>
   </div>
 </div>
 
 <!-- YT PLAYLIST MODAL -->
 <div id="modal-pl" class="modal-wrap">
-  <div class="glass modal-box rounded-2xl p-5 md:p-6 max-w-sm w-full mx-4 scr">
+  <div class="glass modal-box rounded-2xl p-6 max-w-sm w-full mx-4">
     <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/8">
       <div><h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Thư viện YouTube</h3><p class="text-xs text-white/35 mt-0.5">Dán link để thêm bài</p></div>
       <button id="pl-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
@@ -235,13 +209,13 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
       <input id="yt-url-in" type="text" placeholder="youtube.com/watch?v=..." class="flex-1 bg-white/90 border border-white/20 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white">
       <button id="yt-url-add" class="px-3 py-2 bg-red-600/20 border border-red-400/25 text-red-300 rounded-xl text-xs hover:bg-red-600/30 transition-colors whitespace-nowrap">+ Thêm</button>
     </div>
-    <div id="pl-list" class="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-0.5 scr"></div>
+    <div id="pl-list" class="flex flex-col gap-1.5 max-h-72 overflow-y-auto pr-0.5 scr"></div>
   </div>
 </div>
 
 <!-- BG LIST MODAL -->
 <div id="modal-bg" class="modal-wrap">
-  <div class="glass modal-box rounded-2xl p-5 md:p-6 max-w-lg w-full mx-4 scr">
+  <div class="glass modal-box rounded-2xl p-6 max-w-lg w-full mx-4">
     <div class="flex justify-between items-center mb-5 pb-4 border-b border-white/8">
       <div>
         <h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Hình nền</h3>
@@ -249,16 +223,16 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
       </div>
       <button id="bg-modal-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
     </div>
-    <p class="text-xs text-white/35 uppercase tracking-widest mb-3 font-semibold">✦ Animated</p>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-5" id="bg-anim-grid"></div>
-    <p class="text-xs text-white/35 uppercase tracking-widest mb-3 font-semibold">📷 Ảnh thực</p>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5" id="bg-photo-grid"></div>
+    <p class="text-xs text-white/35 uppercase tracking-widest mb-3">✦ Animated</p>
+    <div class="grid grid-cols-4 gap-2.5 mb-5" id="bg-anim-grid"></div>
+    <p class="text-xs text-white/35 uppercase tracking-widest mb-3">📷 Ảnh thực</p>
+    <div class="grid grid-cols-4 gap-2.5" id="bg-photo-grid"></div>
   </div>
 </div>
 
 <!-- ADD PLAYLIST MODAL -->
 <div id="modal-add-pl" class="modal-wrap">
-  <div class="glass modal-box rounded-2xl p-5 md:p-6 max-w-sm w-full mx-4 scr">
+  <div class="glass modal-box rounded-2xl p-6 max-w-sm w-full mx-4">
     <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/8">
       <div>
         <h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Thêm vào playlist</h3>
@@ -282,7 +256,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
       </button>
     </div>
     <div class="mt-4 pt-4 border-t border-white/8">
-      <p class="text-xs text-white/35 mb-2.5 uppercase tracking-widest font-semibold">Playlist hiện tại</p>
+      <p class="text-xs text-white/35 mb-2.5 uppercase tracking-widest">Playlist hiện tại</p>
       <div id="add-pl-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto scr"></div>
     </div>
   </div>
@@ -303,6 +277,7 @@ function resizeBg() {
 }
 window.addEventListener('resize', () => {
   resizeBg();
+  // Re-init stars after canvas reset
   if (animRaf) {
     cancelAnimationFrame(animRaf);
     animRaf = null;
@@ -343,6 +318,7 @@ function clearEffects() {
   bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
 }
 
+// ---- Gradient animation ----
 function animateGrad(colors) {
   const parsed = colors.map(hex => {
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -370,6 +346,7 @@ function animateGrad(colors) {
   draw();
 }
 
+// ---- Stars canvas ----
 let starList = [];
 function initStars() {
   starList = Array.from({length:200}, () => ({
@@ -407,6 +384,7 @@ function animateStars() {
   animRaf = requestAnimationFrame(animateStars);
 }
 
+// ---- Neon canvas ----
 function animateNeon() {
   let t = 0;
   const nc = ['#ff00ff','#00ffff','#ff0080','#8000ff','#00ff80'];
@@ -414,17 +392,20 @@ function animateNeon() {
     bgCtx.fillStyle = 'rgba(3,2,14,0.18)';
     bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
     t += 0.006;
+    // grid
     for (let i=0;i<5;i++) {
       const x = (i/5)*bgCanvas.width + Math.sin(t+i*1.3)*15;
       bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x,bgCanvas.height);
       bgCtx.strokeStyle=`rgba(${i%2?0:100},${i%3?20:180},255,0.035)`; bgCtx.lineWidth=1; bgCtx.stroke();
     }
+    // stars dim
     for (let i=0;i<80;i++){
       if(!starList[i]) continue;
       const s=starList[i]; s.a+=s.spd*(Math.random()>0.5?1:-1); s.a=Math.max(0.02,Math.min(0.5,s.a));
       bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r*0.6,0,Math.PI*2);
       bgCtx.fillStyle=`rgba(180,180,255,${s.a})`; bgCtx.fill();
     }
+    // neon orbs
     for (let i=0;i<3;i++){
       const x=bgCanvas.width*(0.2+i*0.3)+Math.sin(t*0.6+i*2.1)*70;
       const y=bgCanvas.height*0.45+Math.cos(t*0.4+i*1.7)*90;
@@ -439,6 +420,7 @@ function animateNeon() {
   draw();
 }
 
+// ---- Particles ----
 function spawnParticles(colors) {
   for (let i=0;i<22;i++){
     const p=document.createElement('div'); p.className='ptcl';
@@ -448,6 +430,7 @@ function spawnParticles(colors) {
   }
 }
 
+// ---- Zen orb ----
 function spawnZenOrb() {
   [[300,0.25],[520,0.07]].forEach(([sz,op]) => {
     const o=document.createElement('div'); o.className='zen-orb';
@@ -456,6 +439,7 @@ function spawnZenOrb() {
   });
 }
 
+// ---- MAIN applyBg ----
 function applyBg(idx) {
   clearEffects();
   bgIdx = idx;
@@ -478,15 +462,25 @@ function applyBg(idx) {
     if (bg.ptcl) spawnParticles(bg.ptcl);
     if (bg.orb) spawnZenOrb();
   } else if (bg.type === 'photo') {
+    // Show dark canvas while loading
     bgCtx.fillStyle='#05030a'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    // Fade in photo when ready
     bgPhoto.style.backgroundImage = `url('${bg.url}')`;
     const probe = new Image();
-    probe.onload = () => { if (localStorage.getItem('zf-bg') === bg.id) bgPhoto.classList.add('loaded'); };
-    probe.onerror = () => { if (localStorage.getItem('zf-bg') === bg.id) applyBg(1); };
+    probe.onload = () => {
+      if (localStorage.getItem('zf-bg') === bg.id) bgPhoto.classList.add('loaded');
+    };
+    probe.onerror = () => {
+      // fallback to galaxy gradient
+      if (localStorage.getItem('zf-bg') === bg.id) applyBg(1);
+    };
     probe.src = bg.url;
   }
 }
 
+// next-bg listener moved to bottom
+
+// Init from saved
 const savedBgId = localStorage.getItem('zf-bg') || 'stars';
 bgIdx = Math.max(0, BG_LIST.findIndex(b => b.id === savedBgId));
 applyBg(bgIdx);
@@ -510,14 +504,20 @@ function mkNoise(ctx, secs) {
   const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true; return src;
 }
 
+// Rain: layered drops simulation
+// - Base layer: soft pink noise (not harsh white) for rain hiss
+// - Drop layer: random amplitude-modulated bursts mimicking lộp độp drops
 function mkRain(vol) {
   const ctx = getCtx();
+
+  // Layer 1: soft background rain hiss (pink-ish = lowpass filtered white)
   const hiss = mkNoise(ctx, 3);
   const lp1  = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=3000;
   const lp2  = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=1800;
   const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.18;
   hiss.connect(lp1); lp1.connect(lp2); lp2.connect(gHiss); gHiss.connect(ctx.destination);
 
+  // Layer 2: individual drop ticks (bandpass bursts, random timing)
   const dropSrc = mkNoise(ctx, 1);
   const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=2400; bp1.Q.value=3;
   const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1200; bp2.Q.value=2;
@@ -525,6 +525,7 @@ function mkRain(vol) {
   dropSrc.connect(bp1); bp1.connect(gDrop); gDrop.connect(ctx.destination);
   dropSrc.connect(bp2); bp2.connect(gDrop);
 
+  // Layer 3: heavier drops (lower freq pops)
   const heavySrc = mkNoise(ctx, 1);
   const bpH = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=600; bpH.Q.value=1.5;
   const gHeavy = ctx.createGain(); gHeavy.gain.value = 0;
@@ -532,9 +533,11 @@ function mkRain(vol) {
 
   hiss.start(); dropSrc.start(); heavySrc.start();
 
+  // Schedule dripping drops
   let dropTimer, heavyTimer;
   function scheduleDrops() {
     const now = ctx.currentTime;
+    // Light drops: frequent ticking
     for (let i = 0; i < 12; i++) {
       const t   = now + Math.random() * 1.2;
       const amp = (0.15 + Math.random() * 0.45) * vol;
@@ -546,6 +549,7 @@ function mkRain(vol) {
   }
   function scheduleHeavy() {
     const now = ctx.currentTime;
+    // Heavier drops: less frequent, deeper sound
     for (let i = 0; i < 4; i++) {
       const t   = now + Math.random() * 1.8;
       const amp = (0.2 + Math.random() * 0.35) * vol;
@@ -559,30 +563,44 @@ function mkRain(vol) {
 
   return {
     g: gHiss,
-    setVol(v) { gHiss.gain.setTargetAtTime(v * 0.18, ctx.currentTime, 0.1); },
-    stop() { clearTimeout(dropTimer); clearTimeout(heavyTimer); try { hiss.stop(); dropSrc.stop(); heavySrc.stop(); } catch(e) {} }
+    setVol(v) {
+      gHiss.gain.setTargetAtTime(v * 0.18, ctx.currentTime, 0.1);
+    },
+    stop() {
+      clearTimeout(dropTimer); clearTimeout(heavyTimer);
+      try { hiss.stop(); dropSrc.stop(); heavySrc.stop(); } catch(e) {}
+    }
   };
 }
 
+// Fire: realistic campfire with wood pops
+// - Deep rumble base (burning wood low freq)
+// - Mid crackle (continuous fire hiss)
+// - Sharp pops (wood snapping/exploding)
 function mkFire(vol) {
   const ctx = getCtx();
+
+  // Layer 1: deep rumble — the core burning sound
   const rumble = mkNoise(ctx, 4);
   const lpR1 = ctx.createBiquadFilter(); lpR1.type='lowpass'; lpR1.frequency.value=380;
   const lpR2 = ctx.createBiquadFilter(); lpR2.type='lowpass'; lpR2.frequency.value=180;
   const gRumble = ctx.createGain(); gRumble.gain.value = vol * 0.42;
   rumble.connect(lpR1); lpR1.connect(lpR2); lpR2.connect(gRumble); gRumble.connect(ctx.destination);
 
+  // Layer 2: mid crackle hiss — the constant fire texture
   const hiss = mkNoise(ctx, 2);
   const bpH  = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=900; bpH.Q.value=0.6;
   const lpH  = ctx.createBiquadFilter(); lpH.type='lowpass'; lpH.frequency.value=2500;
   const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.22;
   hiss.connect(bpH); bpH.connect(lpH); lpH.connect(gHiss); gHiss.connect(ctx.destination);
 
+  // Layer 3: wood pops (sharp transient bursts — the lộp độp sound)
   const popSrc = mkNoise(ctx, 1);
   const bpPop  = ctx.createBiquadFilter(); bpPop.type='bandpass'; bpPop.frequency.value=1800; bpPop.Q.value=4;
   const gPop   = ctx.createGain(); gPop.gain.value = 0;
   popSrc.connect(bpPop); bpPop.connect(gPop); gPop.connect(ctx.destination);
 
+  // Layer 4: deep wood cracks (lower frequency pops — chunky)
   const crackSrc = mkNoise(ctx, 1);
   const bpCrack  = ctx.createBiquadFilter(); bpCrack.type='bandpass'; bpCrack.frequency.value=500; bpCrack.Q.value=3;
   const gCrack   = ctx.createGain(); gCrack.gain.value = 0;
@@ -592,28 +610,31 @@ function mkFire(vol) {
 
   let popTimer, crackTimer;
 
+  // High pops: frequent light snaps
   function schedulePops() {
     const now = ctx.currentTime;
     const n = 3 + Math.floor(Math.random() * 5);
     for (let i = 0; i < n; i++) {
       const t   = now + Math.random() * 1.0;
       const amp = (0.15 + Math.random() * 0.55) * vol;
-      const dur = 0.008 + Math.random() * 0.018;
+      const dur = 0.008 + Math.random() * 0.018; // very short = sharp pop
       gPop.gain.setValueAtTime(amp, t);
       gPop.gain.setValueAtTime(0,   t + dur);
     }
     popTimer = setTimeout(schedulePops, 600 + Math.random() * 700);
   }
 
+  // Deep cracks: less frequent, chunkier
   function scheduleCracks() {
     const now = ctx.currentTime;
     const n = 1 + Math.floor(Math.random() * 3);
     for (let i = 0; i < n; i++) {
       const t   = now + Math.random() * 2.0;
       const amp = (0.25 + Math.random() * 0.5) * vol;
-      const dur = 0.025 + Math.random() * 0.045; 
+      const dur = 0.025 + Math.random() * 0.045; // slightly longer = wood chunk
       gCrack.gain.setValueAtTime(amp, t);
       gCrack.gain.setValueAtTime(0,   t + dur);
+      // sometimes add a follow-up micro-pop (like wood settling)
       if (Math.random() > 0.5) {
         const t2 = t + dur + 0.02 + Math.random() * 0.04;
         gCrack.gain.setValueAtTime(amp * 0.4, t2);
@@ -627,11 +648,19 @@ function mkFire(vol) {
 
   return {
     g: gRumble,
-    setVol(v) { const now = ctx.currentTime; gRumble.gain.setTargetAtTime(v * 0.42, now, 0.1); gHiss.gain.setTargetAtTime(v * 0.22, now, 0.1); },
-    stop() { clearTimeout(popTimer); clearTimeout(crackTimer); try { rumble.stop(); hiss.stop(); popSrc.stop(); crackSrc.stop(); } catch(e) {} }
+    setVol(v) {
+      const now = ctx.currentTime;
+      gRumble.gain.setTargetAtTime(v * 0.42, now, 0.1);
+      gHiss.gain.setTargetAtTime(v * 0.22, now, 0.1);
+    },
+    stop() {
+      clearTimeout(popTimer); clearTimeout(crackTimer);
+      try { rumble.stop(); hiss.stop(); popSrc.stop(); crackSrc.stop(); } catch(e) {}
+    }
   };
 }
 
+// Waves: layered bandpass noise with slow LFOs on gain (not on g.gain directly)
 function mkWaves(vol) {
   const ctx=getCtx();
   const master=ctx.createGain(); master.gain.value=vol*0.62; master.connect(ctx.destination);
@@ -640,8 +669,10 @@ function mkWaves(vol) {
     const src=mkNoise(ctx,3);
     const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=170+i*85; bp.Q.value=0.55;
     const g=ctx.createGain(); g.gain.value=0.18+Math.random()*0.1;
+    // Use separate gain node for LFO so it multiplies, not adds
     const lfoMod=ctx.createGain(); lfoMod.gain.value=0.22;
     const lfo=ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.06+i*0.022;
+    // lfo → lfoMod controls an intermediate gain
     const waveG=ctx.createGain(); waveG.gain.value=0.5;
     lfo.connect(lfoMod); lfoMod.connect(waveG.gain);
     src.connect(bp); bp.connect(g); g.connect(waveG); waveG.connect(master);
@@ -654,6 +685,7 @@ const AMB_MK = {rain:mkRain, fire:mkFire, waves:mkWaves};
 
 function ambSetVol(s, vol) {
   const n=ambNodes[s]; if(!n) return;
+  // fire and rain both have custom setVol for multi-layer control
   if (n.setVol) { n.setVol(vol); return; }
   const mult={waves:0.62}[s]||0.5;
   n.g.gain.setTargetAtTime(vol*mult, getCtx().currentTime, 0.1);
@@ -677,6 +709,7 @@ document.querySelectorAll('.amb-btn').forEach(btn => {
     else { btn.classList.add('opacity-50'); btn.classList.remove('amb-active'); sl.value=0; ambStop(s); const v=JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[s]=0; localStorage.setItem('zf-amb',JSON.stringify(v)); }
   });
 });
+// Restore saved ambient
 const savedAmb=JSON.parse(localStorage.getItem('zf-amb')||'{}');
 Object.entries(savedAmb).forEach(([s,v])=>{ if(v>0){ const sl=document.querySelector(`.amb-sl[data-s="${s}"]`), bt=document.querySelector(`.amb-btn[data-s="${s}"]`); if(sl)sl.value=v; if(bt){bt.classList.remove('opacity-50');bt.classList.add('amb-active');} } });
 
@@ -695,12 +728,7 @@ let ytP=null, ytIdx=0, ytReady=false, ytVol=70, ytMuted=false, ytProgInt=null;
 function onYouTubeIframeAPIReady() {
   ytP = new YT.Player('yt-player', {
     height:'1', width:'1', videoId: YT_TRACKS[0].id,
-    playerVars:{
-      autoplay:0, controls:0, disablekb:1, fs:0,
-      modestbranding:1, rel:0, iv_load_policy:3,
-      playsinline:1, origin: window.location.origin,
-      enablejsapi: 1, widget_referrer: window.location.origin
-    },
+    playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1},
     events:{
       onReady: e => { ytReady=true; e.target.setVolume(ytVol); ytUpdateUI(0,false); },
       onStateChange: e => {
@@ -715,14 +743,8 @@ function onYouTubeIframeAPIReady() {
 function ytLoad(idx, auto) {
   ytIdx=idx; ytUpdateUI(idx,true);
   if(!ytReady||!ytP) return;
-  if(auto){
-    ytP.cueVideoById({videoId:YT_TRACKS[idx].id});
-    if(isRunning){ setTimeout(()=>{ try{ ytP.playVideo(); }catch(e){} }, 150); }
-    else { document.getElementById('yt-icon').className='ph-fill ph-play text-sm'; }
-  } else {
-    ytP.cueVideoById({videoId:YT_TRACKS[idx].id});
-    document.getElementById('yt-icon').className='ph-fill ph-play text-sm';
-  }
+  if(auto){ ytP.stopVideo(); setTimeout(()=>{ ytP.loadVideoById({videoId:YT_TRACKS[idx].id}); },120); }
+  else { ytP.cueVideoById({videoId:YT_TRACKS[idx].id}); document.getElementById('yt-icon').className='ph-fill ph-play text-sm'; }
   ytRenderList();
 }
 function ytUpdateUI(idx, loading) {
@@ -761,6 +783,7 @@ document.getElementById('yt-mute-btn').addEventListener('click', () => {
   else { ytMuted=true;document.getElementById('yt-vol').value=0;if(ytReady&&ytP)ytP.mute();document.getElementById('yt-mute-icon').className='ph-fill ph-speaker-slash text-sm'; }
 });
 
+// Playlist modal
 const mPl=document.getElementById('modal-pl');
 function openPl(){ ytRenderList(); mPl.classList.add('open'); }
 function closePl(){ mPl.classList.remove('open'); }
@@ -813,7 +836,6 @@ const QUOTES=[
 ];
 const qEl=document.getElementById('quote');
 function rotateQuote(){
-  if(!qEl) return;
   qEl.style.opacity=0;
   setTimeout(()=>{
     const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
@@ -838,8 +860,7 @@ function audioPlay() {
   getCtx();
   const saved=JSON.parse(localStorage.getItem('zf-amb')||'{}');
   Object.entries(saved).forEach(([s,v])=>{ if(v>0&&!ambNodes[s]) ambStart(s,v/100); });
-  const ytState = ytReady && ytP ? ytP.getPlayerState() : -1;
-  if(ytState === YT.PlayerState.PAUSED){ try{ ytP.playVideo(); }catch(e){} }
+  if(ytReady&&ytP&&ytP.getPlayerState()!==YT.PlayerState.PLAYING) ytP.playVideo();
 }
 function audioPause() {
   if(ytReady&&ytP) ytP.pauseVideo();
@@ -849,7 +870,7 @@ function audioPause() {
 function toggleTimer() {
   if(isRunning){
     clearInterval(tInt); audioPause();
-    document.getElementById('play-icon').className='ph-fill ph-play text-2xl md:text-3xl ml-1';
+    document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1';
     document.getElementById('t-status').textContent='Tạm dừng';
   } else {
     if(rem===0) rem=dur;
@@ -858,7 +879,7 @@ function toggleTimer() {
       rem--; updateDisp();
       if(rem<=0){
         clearInterval(tInt); isRunning=false;
-        document.getElementById('play-icon').className='ph-fill ph-play text-2xl md:text-3xl ml-1';
+        document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1';
         document.getElementById('t-status').textContent='Hoàn thành!';
         audioPause();
         const toast=document.createElement('div');
@@ -867,17 +888,18 @@ function toggleTimer() {
         document.body.appendChild(toast); setTimeout(()=>toast.remove(),5000);
       }
     },1000);
-    document.getElementById('play-icon').className='ph-fill ph-pause text-2xl md:text-3xl';
+    document.getElementById('play-icon').className='ph-fill ph-pause text-3xl';
     document.getElementById('t-status').textContent='Đang tập trung';
   }
   isRunning=!isRunning;
 }
-function resetTimer(){ clearInterval(tInt); isRunning=false; rem=dur; audioPause(); document.getElementById('play-icon').className='ph-fill ph-play text-2xl md:text-3xl ml-1'; document.getElementById('t-status').textContent='Sẵn sàng'; updateDisp(); }
+function resetTimer(){ clearInterval(tInt); isRunning=false; rem=dur; audioPause(); document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1'; document.getElementById('t-status').textContent='Sẵn sàng'; updateDisp(); }
 
 document.getElementById('btn-play').addEventListener('click', toggleTimer);
 document.getElementById('btn-reset').addEventListener('click', resetTimer);
 document.addEventListener('keydown', e=>{ if(e.code==='Space'){e.preventDefault();toggleTimer();}if(e.key.toLowerCase()==='r')resetTimer(); });
 
+// Time modal
 const mTime=document.getElementById('modal-time');
 document.getElementById('btn-timer').addEventListener('click', ()=>mTime.classList.add('open'));
 document.getElementById('time-close').addEventListener('click', ()=>mTime.classList.remove('open'));
@@ -892,7 +914,10 @@ ytUpdateUI(0,false);
 // BG LIST MODAL
 // ================================================================
 const mBg = document.getElementById('modal-bg');
-document.getElementById('btn-bg-list').addEventListener('click', () => { renderBgGrid(); mBg.classList.add('open'); });
+document.getElementById('btn-bg-list').addEventListener('click', () => {
+  renderBgGrid();
+  mBg.classList.add('open');
+});
 document.getElementById('bg-modal-close').addEventListener('click', () => mBg.classList.remove('open'));
 mBg.addEventListener('click', e => { if(e.target===mBg) mBg.classList.remove('open'); });
 
@@ -909,6 +934,7 @@ function renderBgGrid() {
       btn.innerHTML = `<img src="${bg.url.replace('w=1920','w=300')}" class="w-full h-full object-cover" loading="lazy"><div class="absolute inset-0 bg-black/20 flex items-end p-1.5"><span class="text-white/80 text-xs leading-tight line-clamp-2">${bg.label.replace('📷 ','')}</span></div>`;
       btn.style.position = 'relative';
     } else {
+      // Gradient preview
       const colors = bg.colors || ['#0f0c29','#24243e'];
       const grad = `linear-gradient(135deg, ${colors.join(',')})`;
       btn.innerHTML = `<div class="w-full h-full flex items-end p-1.5" style="background:${grad}"><span class="text-white/80 text-xs leading-tight">${bg.label.replace('✦ ','')}</span></div>`;
@@ -922,22 +948,32 @@ function renderBgGrid() {
 // ADD PLAYLIST MODAL
 // ================================================================
 const mAddPl = document.getElementById('modal-add-pl');
-document.getElementById('btn-add-playlist').addEventListener('click', () => { renderAddPlList(); mAddPl.classList.add('open'); });
-document.getElementById('add-pl-close').addEventListener('click', () => mAddPl.classList.remove('open'); });
+document.getElementById('btn-add-playlist').addEventListener('click', () => {
+  renderAddPlList();
+  mAddPl.classList.add('open');
+});
+document.getElementById('add-pl-close').addEventListener('click', () => mAddPl.classList.remove('open'));
 mAddPl.addEventListener('click', e => { if(e.target===mAddPl) mAddPl.classList.remove('open'); });
 
 document.getElementById('add-pl-submit').addEventListener('click', () => {
-  const urlIn = document.getElementById('add-url-in'), titleIn = document.getElementById('add-title-in'), raw = urlIn.value.trim();
+  const urlIn   = document.getElementById('add-url-in');
+  const titleIn = document.getElementById('add-title-in');
+  const raw     = urlIn.value.trim();
   if (!raw) return;
+
+  // Extract video ID
   const vm = raw.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
   if (!vm) { alert('Link không hợp lệ! Vui lòng dán link video YouTube.'); return; }
   const id = vm[1];
   if (YT_TRACKS.find(t => t.id === id)) { alert('Bài này đã có trong danh sách rồi!'); urlIn.value=''; titleIn.value=''; return; }
+
   const title = titleIn.value.trim() || `Video: ${id}`;
   YT_TRACKS.push({ id, title, ch: 'YouTube' });
   urlIn.value = ''; titleIn.value = '';
   renderAddPlList();
+  // Also refresh yt playlist modal if open
   if (document.getElementById('modal-pl').classList.contains('open')) ytRenderList();
+  // Load and play the new track
   ytLoad(YT_TRACKS.length - 1, isRunning);
 });
 
@@ -956,6 +992,7 @@ function renderAddPlList() {
       </div>
       ${isActive ? '<i class="ph-fill ph-waveform text-red-300 text-xs flex-shrink-0 animate-pulse"></i>' : `<button class="text-white/20 hover:text-red-400 transition-colors flex-shrink-0" data-del="${i}"><i class="ph ph-trash text-xs"></i></button>`}
     `;
+    // Delete button
     const delBtn = row.querySelector('[data-del]');
     if (delBtn) {
       delBtn.addEventListener('click', () => {
@@ -969,13 +1006,14 @@ function renderAddPlList() {
   });
 }
 
-function doNextBg() { applyBg((bgIdx + 1) % BG_LIST.length); }
-document.getElementById('btn-next-bg').addEventListener('click', doNextBg);
-document.getElementById('btn-next-bg-m').addEventListener('click', doNextBg);
-document.getElementById('btn-bg-list').addEventListener('click', () => { renderBgGrid(); mBg.classList.add('open'); });
-document.getElementById('btn-bg-list-m').addEventListener('click', () => { renderBgGrid(); mBg.classList.add('open'); });
-document.getElementById('btn-add-playlist').addEventListener('click', () => { renderAddPlList(); mAddPl.classList.add('open'); });
-document.getElementById('btn-add-playlist-m').addEventListener('click', () => { renderAddPlList(); mAddPl.classList.add('open'); });
+// btn-next-bg label update (now just shows name briefly)
+document.getElementById('btn-next-bg').addEventListener('click', () => {
+  applyBg((bgIdx + 1) % BG_LIST.length);
+  const btn = document.getElementById('btn-next-bg');
+  btn.style.transition = 'transform 0.35s ease';
+  btn.style.transform = 'rotate(360deg)';
+  setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 380);
+});
 </script>
 </body>
 </html>
