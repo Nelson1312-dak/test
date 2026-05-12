@@ -74,6 +74,28 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 
 /* ---- MAIN SCROLL (mobile) ---- */
 #main-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* ---- POPUP MODE ---- */
+#popup-bar{display:none;height:30px;flex-shrink:0;align-items:center;justify-content:space-between;padding:0 10px;background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.07);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:.06em;cursor:move;user-select:none}
+#popup-bar button{width:20px;height:20px;border-radius:50%;border:none;cursor:pointer;background:rgba(220,50,50,0.35);color:#ff8a80;font-size:11px;display:flex;align-items:center;justify-content:center;transition:opacity .2s;opacity:.7}
+#popup-bar button:hover{opacity:1}
+body.popup-mode #quote{display:none}
+body.popup-mode header{padding-top:4px;padding-bottom:4px;min-height:40px}
+body.popup-mode .mixer-panel{display:none}
+body.popup-mode #main-scroll{height:100dvh;height:100vh}
+body.popup-mode main{padding-top:0;padding-bottom:0;justify-content:center}
+body.popup-mode .timer-body{gap:0}
+body.popup-mode footer{display:none}
+
+/* ---- ELECTRON WIN-BAR ---- */
+#win-bar{display:none;-webkit-app-region:drag;height:32px;flex-shrink:0;align-items:center;justify-content:flex-end;padding:0 10px;gap:4px;background:rgba(0,0,0,0.25);border-bottom:1px solid rgba(255,255,255,0.06)}
+#win-bar button{-webkit-app-region:no-drag;width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:opacity 0.2s;opacity:0.55}
+#win-bar button:hover{opacity:1}
+#win-btn-hide{background:rgba(255,255,255,0.12);color:#fff}
+#win-btn-min{background:rgba(255,200,50,0.25);color:#ffd54f}
+#win-btn-close{background:rgba(220,50,50,0.3);color:#ff8a80}
+/* Khi trong Electron, header không cần drag riêng vì đã có win-bar */
+body.in-electron header{-webkit-app-region:no-drag}
 </style>
 </head>
 <body>
@@ -85,6 +107,20 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 
 <!-- Full-height wrapper so BG stays fixed but content scrolls on mobile -->
 <div id="main-scroll" style="position:relative;z-index:10;height:100dvh;height:100vh">
+
+<!-- Popup mode bar (shown when opened via window.open) -->
+<div id="popup-bar">
+  <span>✦ ZenFlow Widget</span>
+  <button onclick="window.close()" title="Đóng">✕</button>
+</div>
+
+<!-- Electron window controls (hidden in browser) -->
+<div id="win-bar">
+  <button id="win-btn-hide"  title="Ẩn xuống tray">–</button>
+  <button id="win-btn-min"   title="Thu nhỏ">⊟</button>
+  <button id="win-btn-close" title="Thoát">✕</button>
+</div>
+
 <main class="w-full max-w-6xl mx-auto px-4 pt-4 pb-6 flex flex-col min-h-full">
 
   <!-- HEADER -->
@@ -110,11 +146,14 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
       <button id="btn-add-playlist" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Playlist">
         <i class="ph ph-playlist text-sm sm:text-base"></i>
       </button>
+      <button id="btn-popup" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Mở dạng widget" style="display:none">
+        <i class="ph ph-app-window text-sm sm:text-base"></i>
+      </button>
     </div>
   </header>
 
   <!-- BODY -->
-  <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-5 lg:gap-10 py-4 lg:py-0">
+  <div class="timer-body flex-1 flex flex-col lg:flex-row items-center justify-center gap-5 lg:gap-10 py-4 lg:py-0">
 
     <!-- TIMER -->
     <div class="glass rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-8 md:p-10 flex flex-col items-center w-full max-w-xs sm:max-w-md">
@@ -139,7 +178,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
     </div>
 
     <!-- MIXER -->
-    <div class="glass rounded-2xl sm:rounded-3xl p-4 sm:p-5 w-full max-w-xs sm:max-w-sm flex flex-col gap-3 sm:gap-4">
+    <div class="mixer-panel glass rounded-2xl sm:rounded-3xl p-4 sm:p-5 w-full max-w-xs sm:max-w-sm flex flex-col gap-3 sm:gap-4">
       <h3 class="text-sm font-semibold tracking-wide text-white/80" style="font-family:'Space Grotesk',sans-serif">Không gian âm thanh</h3>
 
       <!-- YouTube -->
@@ -878,6 +917,33 @@ function renderAddPlList() {
     }
     list.appendChild(row);
   });
+}
+
+// Popup widget mode (opened via window.open from main page)
+if (window.opener && !window.zenAPI) {
+  document.body.classList.add('popup-mode');
+  document.getElementById('popup-bar').style.display = 'flex';
+  document.getElementById('btn-popup').style.display = 'none';
+} else if (!window.zenAPI) {
+  // Normal browser tab — show the "open widget" button
+  document.getElementById('btn-popup').style.display = 'flex';
+}
+
+document.getElementById('btn-popup').addEventListener('click', () => {
+  const w = 380, h = 520;
+  const left = screen.width  - w - 20;
+  const top  = Math.max(0, screen.height - h - 60);
+  const feat = `popup=yes,width=${w},height=${h},left=${left},top=${top},resizable=yes`;
+  window.open(location.href, 'zenflow-widget', feat);
+});
+
+// Electron widget mode
+if (window.zenAPI) {
+  document.body.classList.add('in-electron');
+  document.getElementById('win-bar').style.display = 'flex';
+  document.getElementById('win-btn-hide').onclick  = () => window.zenAPI.hide();
+  document.getElementById('win-btn-min').onclick   = () => window.zenAPI.minimize();
+  document.getElementById('win-btn-close').onclick = () => window.zenAPI.quit();
 }
 
 document.getElementById('btn-next-bg').addEventListener('click', () => {
