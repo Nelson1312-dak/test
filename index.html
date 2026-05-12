@@ -1,798 +1,876 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenFlow</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        *{box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;margin:0;overflow:hidden;background:#0f172a;color:white}
-        h1,h2,h3,.font-space{font-family:'Space Grotesk',sans-serif}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenFlow</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;margin:0;overflow:hidden;background:#05030a;color:white}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif}
 
-        #bg-main{position:fixed;top:-5%;left:-5%;width:110%;height:110%;background-size:cover;background-position:center;z-index:0;animation:panBg 60s infinite alternate linear;filter:brightness(0.55) contrast(1.1)}
-        @keyframes panBg{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.06) translate(-1%,-1%)}}
-        @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+/* ---- BG ---- */
+#bg-canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+#bg-photo{position:fixed;top:-6%;left:-6%;width:112%;height:112%;background-size:cover;background-position:center;z-index:0;opacity:0;transition:opacity 1.2s ease;animation:panBg 60s infinite alternate linear;filter:brightness(0.52) contrast(1.1)}
+#bg-photo.loaded{opacity:1}
+@keyframes panBg{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.06) translate(-1.2%,-1%)}}
+#bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,0.1);pointer-events:none}
 
-        .bg-gradient-anim{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e,#1a1a2e,#16213e,#0f3460);background-size:400% 400%;animation:gradShift 20s ease infinite}
-        .bg-aurora{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#001a0e,#003320,#0a4a1a,#052a30,#001a2e);background-size:400% 400%;animation:gradShift 18s ease infinite}
-        .bg-sunset{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a0533,#3d0b00,#7c1900,#3d0b00,#1a0533,#0d0221);background-size:400% 400%;animation:gradShift 22s ease infinite}
-        .bg-ocean{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#000428,#004e92,#000428,#001a4e,#004e92);background-size:400% 400%;animation:gradShift 16s ease infinite}
-        .bg-sakura{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a0a14,#3d1a2e,#6b2d4a,#3d1a2e,#1a0a14,#2d0f24);background-size:400% 400%;animation:gradShift 24s ease infinite}
-        .bg-zen{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0a0a0f,#111118,#0d1117,#0a0f1a,#080d14);background-size:400% 400%;animation:gradShift 30s ease infinite}
-        .bg-neon{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#050510,#0a0520,#05102a,#020815,#08051a);background-size:400% 400%;animation:gradShift 12s ease infinite}
+/* ---- GLASS ---- */
+.glass{background:rgba(10,15,30,0.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.09);box-shadow:0 24px 48px -12px rgba(0,0,0,0.6)}
+.gbtn{background:rgba(255,255,255,0.08);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);transition:all 0.25s ease;cursor:pointer}
+.gbtn:hover{background:rgba(255,255,255,0.18);transform:translateY(-1px)}
 
-        #star-canvas{position:fixed;inset:0;z-index:0;display:none}
-        @keyframes zenBreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.3}50%{transform:translate(-50%,-50%) scale(1.4);opacity:0.7}}
-        #bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,0.12);pointer-events:none}
+/* ---- TIMER RING ---- */
+.ring-track{stroke:rgba(255,255,255,0.1)}
+.ring-fill{stroke:white;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 0.15s linear}
 
-        .glass{background:rgba(15,23,42,0.42);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5)}
-        .glass-btn{background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);transition:all 0.3s ease}
-        .glass-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px)}
-        .progress-ring__circle{transition:stroke-dashoffset 0.1s linear;transform:rotate(-90deg);transform-origin:50% 50%}
-        #yt-player{position:absolute;top:-9999px;left:-9999px;width:1px;height:1px}
+/* ---- RANGE ---- */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;margin-top:-5px;box-shadow:0 0 8px rgba(255,255,255,0.6)}
+input[type=range]::-moz-range-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 8px rgba(255,255,255,0.6)}
 
-        input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;position:relative;z-index:10;cursor:pointer}
-        input[type=range]:focus{outline:none}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:14px;width:14px;border-radius:50%;background:#fff;cursor:pointer;margin-top:-5px;box-shadow:0 0 10px rgba(255,255,255,0.7)}
-        input[type=range]::-webkit-slider-runnable-track{width:100%;height:4px;cursor:pointer;background:rgba(255,255,255,0.25);border-radius:2px}
-        input[type=range]::-moz-range-thumb{height:14px;width:14px;border-radius:50%;background:#fff;cursor:pointer;border:none;box-shadow:0 0 10px rgba(255,255,255,0.7)}
-        input[type=range]::-moz-range-track{width:100%;height:4px;cursor:pointer;background:rgba(255,255,255,0.25);border-radius:2px}
+/* ---- YT ---- */
+#yt-player{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none}
+.yt-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(220,38,38,0.2);border:1px solid rgba(248,113,113,0.3);border-radius:20px;padding:2px 8px;font-size:11px;color:#fca5a5}
+#yt-prog-wrap{height:4px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;overflow:hidden}
+#yt-prog-fill{height:100%;background:white;width:0%;border-radius:2px;transition:width 0.6s linear}
 
-        .audio-active{opacity:1!important;background:rgba(255,255,255,0.15)!important}
-        #yt-progress-container{position:relative;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;cursor:pointer;margin-top:4px}
-        #yt-progress-fill{height:100%;border-radius:2px;background:white;width:0%;transition:width 0.5s linear}
+/* ---- AMBIENT ---- */
+.amb-active{opacity:1!important;background:rgba(255,255,255,0.14)!important}
 
-        .custom-scrollbar::-webkit-scrollbar{width:6px}
-        .custom-scrollbar::-webkit-scrollbar-track{background:rgba(255,255,255,0.05);border-radius:10px}
-        .custom-scrollbar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:10px}
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.4)}
+/* ---- SCROLLBAR ---- */
+.scr::-webkit-scrollbar{width:5px}
+.scr::-webkit-scrollbar-track{background:rgba(255,255,255,0.04);border-radius:8px}
+.scr::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:8px}
 
-        .yt-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(255,0,0,0.15);border:1px solid rgba(255,80,80,0.3);border-radius:20px;padding:2px 8px;font-size:11px;color:#fca5a5}
+/* ---- BG LABEL ---- */
+#bg-label{font-size:11px;letter-spacing:.04em;pointer-events:none;white-space:nowrap;transition:color 0.3s}
 
-        .bg-option{width:48px;height:48px;border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all 0.25s ease;flex-shrink:0;overflow:hidden;position:relative}
-        .bg-option:hover{transform:scale(1.1)}
-        .bg-option.active{border-color:white;box-shadow:0 0 0 2px rgba(255,255,255,0.35)}
-        .bg-option img,.bg-option>div{width:100%;height:100%;object-fit:cover;display:block}
+/* ---- PARTICLES ---- */
+.ptcl{position:fixed;border-radius:50%;pointer-events:none;z-index:2;animation:floatUp linear infinite;opacity:0}
+@keyframes floatUp{0%{transform:translateY(105vh) scale(0.3);opacity:0}10%{opacity:0.55}85%{opacity:0.15}100%{transform:translateY(-5vh) scale(1.4);opacity:0}}
 
-        .particle{position:fixed;border-radius:50%;opacity:0;animation:float-up linear infinite;pointer-events:none;z-index:1}
-        @keyframes float-up{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:0.5}90%{opacity:0.15}100%{transform:translateY(-10vh) scale(1.5);opacity:0}}
-    </style>
+/* ---- ZEN ORB ---- */
+@keyframes zenPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.25}50%{transform:translate(-50%,-50%) scale(1.5);opacity:0.55}}
+.zen-orb{position:fixed;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:2;animation:zenPulse 7s ease-in-out infinite}
+
+/* ---- MODAL ---- */
+.modal-wrap{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.25s}
+.modal-wrap.open{opacity:1;pointer-events:all}
+.modal-box{transform:scale(0.95);transition:transform 0.25s}
+.modal-wrap.open .modal-box{transform:scale(1)}
+</style>
 </head>
-<body class="antialiased min-h-screen flex flex-col items-center justify-center">
+<body>
 
-    <canvas id="star-canvas"></canvas>
-    <div id="bg-main"></div>
-    <div id="bg-overlay"></div>
-    <div id="yt-player"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="bg-photo"></div>
+<div id="bg-overlay"></div>
+<div id="yt-player"></div>
 
-    <main class="relative z-10 w-full max-w-6xl mx-auto px-4 py-6 h-screen flex flex-col">
+<main class="relative z-10 w-full max-w-6xl mx-auto px-4 py-6 h-screen flex flex-col">
 
-        <header class="w-full py-4 flex items-center justify-between">
-            <div class="w-10"></div>
-            <div class="flex-1 text-center">
-                <h2 class="text-xl font-space font-bold tracking-widest text-white/80 uppercase">ZenFlow</h2>
-                <p id="quote-display" class="mt-2 text-xs md:text-sm text-slate-200/70 font-light italic h-8 transition-opacity duration-500"></p>
-            </div>
-            <div class="flex items-center gap-2">
-                <span id="bg-label" class="text-white/30 text-xs font-light tracking-wide hidden md:block"></span>
-                <button id="bg-next-btn" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-white/70 hover:text-white transition-all" title="Chuyển hình nền">
-                    <i class="ph ph-arrow-circle-right text-xl"></i>
-                </button>
-            </div>
-        </header>
+  <!-- HEADER -->
+  <header class="flex items-center justify-between py-4">
+    <div class="flex-1"></div>
+    <div class="flex-1 text-center">
+      <h2 class="text-xl font-bold tracking-widest text-white/75 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
+      <p id="quote" class="mt-1.5 text-xs text-white/55 italic h-5 transition-opacity duration-500"></p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1 hidden md:block"></span>
+      <button id="btn-next-bg" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Chuyển bg tiếp theo">
+        <i class="ph ph-arrow-clockwise text-base"></i>
+      </button>
+      <button id="btn-bg-list" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Danh sách hình nền">
+        <i class="ph ph-images text-base"></i>
+      </button>
+      <button id="btn-add-playlist" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Thêm YouTube playlist">
+        <i class="ph ph-playlist text-base"></i>
+      </button>
+    </div>
+  </header>
 
-        <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10 w-full">
+  <!-- BODY -->
+  <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-10">
 
-            <!-- TIMER -->
-            <div class="glass rounded-[3rem] p-8 md:p-10 flex flex-col items-center justify-center w-full max-w-md">
-                <div class="relative w-60 h-60 md:w-72 md:h-72 flex items-center justify-center">
-                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                        <circle class="text-white/10 stroke-current" stroke-width="2" cx="50" cy="50" r="48" fill="transparent"></circle>
-                        <circle id="progress-circle" class="text-white stroke-current progress-ring__circle" stroke-width="2" stroke-linecap="round" cx="50" cy="50" r="48" fill="transparent" stroke-dasharray="301.59" stroke-dashoffset="0"></circle>
-                    </svg>
-                    <div class="z-10 flex flex-col items-center">
-                        <span id="time-display" class="font-space text-5xl md:text-6xl font-bold tracking-tighter drop-shadow-md">25:00</span>
-                        <span id="status-display" class="uppercase tracking-widest text-xs mt-2 text-white/60 font-semibold">Sẵn sàng</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-6 mt-8">
-                    <button id="reset-btn" class="p-3 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"><i class="ph ph-arrow-counter-clockwise text-2xl"></i></button>
-                    <button id="play-pause-btn" class="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                        <i class="ph-fill ph-play text-3xl ml-1" id="play-icon"></i>
-                    </button>
-                    <button id="mode-btn" class="p-3 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors" title="Đổi thời gian"><i class="ph ph-timer text-2xl"></i></button>
-                </div>
-            </div>
-
-            <!-- MIXER -->
-            <div class="glass rounded-3xl p-5 w-full max-w-sm flex flex-col gap-4">
-                <h3 class="font-space text-base font-semibold tracking-wide text-white/90">Không gian âm thanh</h3>
-
-                <!-- YouTube -->
-                <div class="flex flex-col gap-3 border border-white/10 rounded-2xl p-3.5 bg-white/5">
-                    <div class="flex items-center justify-between">
-                        <span class="yt-pill"><i class="ph-fill ph-youtube-logo"></i> YouTube</span>
-                        <div class="flex gap-1 text-white/70">
-                            <button id="yt-prev" class="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors"><i class="ph-fill ph-skip-back text-sm"></i></button>
-                            <button id="yt-play-pause" class="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors"><i class="ph-fill ph-play text-sm" id="yt-play-icon"></i></button>
-                            <button id="yt-next" class="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors"><i class="ph-fill ph-skip-forward text-sm"></i></button>
-                        </div>
-                    </div>
-                    <button id="open-yt-playlist" class="flex items-center gap-3 w-full text-left hover:bg-white/5 rounded-xl p-1.5 -m-1.5 transition-colors group">
-                        <img id="yt-thumb" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white/10" src="" alt="">
-                        <div class="flex-1 min-w-0">
-                            <p id="yt-title" class="text-xs font-medium text-white/90 truncate">Chọn bài hát...</p>
-                            <p id="yt-channel" class="text-xs text-white/40 truncate mt-0.5">YouTube Music</p>
-                        </div>
-                        <i class="ph ph-caret-right text-white/30 group-hover:text-white/60 flex-shrink-0"></i>
-                    </button>
-                    <div id="yt-progress-container"><div id="yt-progress-fill"></div></div>
-                    <div class="flex items-center gap-3">
-                        <button id="yt-toggle" class="w-8 h-8 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-red-300 audio-active">
-                            <i class="ph-fill ph-speaker-high text-sm"></i>
-                        </button>
-                        <input type="range" id="yt-volume" min="0" max="100" value="70">
-                    </div>
-                </div>
-
-                <!-- Rain -->
-                <div class="flex items-center gap-4">
-                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-blue-300 ambient-toggle opacity-50" data-sound="rain">
-                        <i class="ph-fill ph-cloud-rain text-xl"></i>
-                    </button>
-                    <div class="flex-1">
-                        <div class="text-xs text-white/50 mb-2">Tiếng Mưa</div>
-                        <input type="range" min="0" max="100" value="0" class="ambient-slider" data-sound="rain">
-                    </div>
-                </div>
-
-                <!-- Fire -->
-                <div class="flex items-center gap-4">
-                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-orange-400 ambient-toggle opacity-50" data-sound="fire">
-                        <i class="ph-fill ph-fire text-xl"></i>
-                    </button>
-                    <div class="flex-1">
-                        <div class="text-xs text-white/50 mb-2">Lửa Trại</div>
-                        <input type="range" min="0" max="100" value="0" class="ambient-slider" data-sound="fire">
-                    </div>
-                </div>
-
-                <!-- Waves -->
-                <div class="flex items-center gap-4">
-                    <button class="w-10 h-10 rounded-full glass-btn flex items-center justify-center flex-shrink-0 text-cyan-200 ambient-toggle opacity-50" data-sound="waves">
-                        <i class="ph-fill ph-waves text-xl"></i>
-                    </button>
-                    <div class="flex-1">
-                        <div class="text-xs text-white/50 mb-2">Sóng Biển</div>
-                        <input type="range" min="0" max="100" value="0" class="ambient-slider" data-sound="waves">
-                    </div>
-                </div>
-            </div>
+    <!-- TIMER -->
+    <div class="glass rounded-[3rem] p-8 md:p-10 flex flex-col items-center w-full max-w-md">
+      <div class="relative w-60 h-60 md:w-72 md:h-72 flex items-center justify-center">
+        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+          <circle class="ring-track" stroke-width="2" cx="50" cy="50" r="47" fill="none"/>
+          <circle id="ring" class="ring-fill" stroke-width="2" cx="50" cy="50" r="47" fill="none" stroke-dasharray="295.3" stroke-dashoffset="0"/>
+        </svg>
+        <div class="z-10 text-center">
+          <div id="t-display" class="text-5xl md:text-6xl font-bold tracking-tighter" style="font-family:'Space Grotesk',sans-serif">25:00</div>
+          <div id="t-status" class="text-xs uppercase tracking-widest text-white/50 mt-1.5 font-semibold">Sẵn sàng</div>
         </div>
-
-        <footer class="text-center py-3 text-white/25 text-xs">Space để play/pause · R để reset</footer>
-    </main>
-
-    <!-- BG PICKER MODAL -->
-    <div id="bg-modal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass rounded-t-3xl md:rounded-3xl p-6 w-full max-w-md mx-0 md:mx-4" id="bg-modal-content">
-            <div class="flex justify-between items-center mb-5">
-                <div>
-                    <h3 class="text-lg font-space font-medium">Hình nền</h3>
-                    <p class="text-xs text-white/40 mt-0.5">Chọn không gian của bạn</p>
-                </div>
-                <button id="close-bg-modal" class="text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors"><i class="ph ph-x text-lg"></i></button>
-            </div>
-            <p class="text-xs text-white/40 uppercase tracking-widest mb-3">Ảnh thực</p>
-            <div class="flex gap-3 mb-5 overflow-x-auto pb-1">
-                <button class="bg-option" data-bg="photo-stars" title="Bầu trời sao"><img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=100&q=60" alt=""></button>
-                <button class="bg-option" data-bg="photo-forest" title="Rừng đêm"><img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=100&q=60" alt=""></button>
-                <button class="bg-option" data-bg="photo-mountain" title="Núi tuyết"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=100&q=60" alt=""></button>
-                <button class="bg-option" data-bg="photo-beach" title="Bãi biển"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&q=60" alt=""></button>
-                <button class="bg-option" data-bg="photo-cafe" title="Quán cafe"><img src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=100&q=60" alt=""></button>
-                <button class="bg-option" data-bg="photo-rain" title="Mưa đêm"><img src="https://images.unsplash.com/photo-1428592953211-077101b2021b?w=100&q=60" alt=""></button>
-            </div>
-            <p class="text-xs text-white/40 uppercase tracking-widest mb-3">Động ✨</p>
-            <div class="flex gap-3 overflow-x-auto pb-1">
-                <button class="bg-option" data-bg="anim-galaxy" title="Galaxy"><div style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)"></div></button>
-                <button class="bg-option" data-bg="anim-aurora" title="Cực quang"><div style="background:linear-gradient(135deg,#001a0e,#0a4a1a,#052a30)"></div></button>
-                <button class="bg-option" data-bg="anim-sunset" title="Hoàng hôn"><div style="background:linear-gradient(135deg,#3d0b00,#7c1900,#1a0533)"></div></button>
-                <button class="bg-option" data-bg="anim-ocean" title="Đại dương"><div style="background:linear-gradient(135deg,#000428,#004e92)"></div></button>
-                <button class="bg-option" data-bg="anim-stars" title="Sao rơi ✨"><div style="background:linear-gradient(135deg,#05030a,#0d0b26);display:flex;align-items:center;justify-content:center;font-size:18px">✨</div></button>
-            </div>
-        </div>
+      </div>
+      <div class="flex items-center gap-6 mt-8">
+        <button id="btn-reset" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-arrow-counter-clockwise text-2xl"></i></button>
+        <button id="btn-play" class="w-16 h-16 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_24px_rgba(255,255,255,0.25)]">
+          <i id="play-icon" class="ph-fill ph-play text-3xl ml-1"></i>
+        </button>
+        <button id="btn-timer" class="gbtn p-3 rounded-full text-white/60 hover:text-white"><i class="ph ph-timer text-2xl"></i></button>
+      </div>
     </div>
 
-    <!-- TIME MODAL -->
-    <div id="time-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity">
-        <div class="glass rounded-2xl p-8 max-w-sm w-full mx-4 transform scale-95 transition-transform" id="time-modal-content">
-            <h3 class="text-xl font-space mb-6 text-center">Chọn thời gian</h3>
-            <div class="mb-6">
-                <div class="flex justify-between text-white/70 text-sm mb-2"><span>1p</span><span id="slider-val-display" class="font-bold text-white">25 phút</span><span>180p</span></div>
-                <input type="range" id="time-slider" min="1" max="180" value="25">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="10">10 Phút</button>
-                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="30">30 Phút</button>
-                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="60">1 Giờ</button>
-                <button class="time-preset glass-btn py-3 rounded-xl font-medium" data-time="180">3 Giờ</button>
-            </div>
-            <button id="close-modal-btn" class="mt-6 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">Lưu & Đóng</button>
-        </div>
-    </div>
+    <!-- MIXER -->
+    <div class="glass rounded-3xl p-5 w-full max-w-sm flex flex-col gap-4">
+      <h3 class="text-sm font-semibold tracking-wide text-white/80" style="font-family:'Space Grotesk',sans-serif">Không gian âm thanh</h3>
 
-    <!-- YT PLAYLIST MODAL -->
-    <div id="yt-playlist-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity">
-        <div class="glass rounded-2xl p-6 max-w-sm w-full mx-4 transform scale-95 transition-transform" id="yt-playlist-modal-content">
-            <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
-                <div>
-                    <h3 class="text-lg font-space font-medium">Thư viện YouTube</h3>
-                    <p class="text-xs text-white/40 mt-0.5">Dán link YouTube để thêm bài</p>
-                </div>
-                <button id="close-yt-playlist" class="text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors"><i class="ph ph-x text-lg"></i></button>
-            </div>
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="yt-url-input" placeholder="youtube.com/watch?v=..."
-                    class="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30">
-                <button id="yt-url-add" class="px-3 py-2 bg-red-500/20 border border-red-400/30 text-red-300 rounded-xl text-sm hover:bg-red-500/30 transition-colors whitespace-nowrap">+ Thêm</button>
-            </div>
-            <div id="yt-playlist-container" class="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar"></div>
+      <!-- YouTube -->
+      <div class="rounded-2xl border border-white/10 bg-white/4 p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <span class="yt-pill"><i class="ph-fill ph-youtube-logo text-xs"></i> YouTube</span>
+          <div class="flex gap-0.5 text-white/60">
+            <button id="yt-prev" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-back text-sm"></i></button>
+            <button id="yt-pp" class="gbtn p-1.5 rounded-lg hover:text-white"><i id="yt-icon" class="ph-fill ph-play text-sm"></i></button>
+            <button id="yt-next" class="gbtn p-1.5 rounded-lg hover:text-white"><i class="ph-fill ph-skip-forward text-sm"></i></button>
+          </div>
         </div>
-    </div>
+        <button id="yt-open-pl" class="flex items-center gap-2.5 hover:bg-white/5 rounded-xl p-1 -m-1 transition-colors group w-full text-left">
+          <img id="yt-thumb" src="https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white/10" alt="">
+          <div class="flex-1 min-w-0">
+            <p id="yt-title" class="text-xs font-medium text-white/85 truncate">Chọn bài hát...</p>
+            <p id="yt-ch" class="text-xs text-white/35 truncate mt-0.5">YouTube Music</p>
+          </div>
+          <i class="ph ph-caret-right text-white/25 group-hover:text-white/50 flex-shrink-0 text-sm"></i>
+        </button>
+        <div id="yt-prog-wrap"><div id="yt-prog-fill"></div></div>
+        <div class="flex items-center gap-2.5">
+          <button id="yt-mute-btn" class="gbtn w-8 h-8 rounded-full flex items-center justify-center text-red-300 flex-shrink-0">
+            <i id="yt-mute-icon" class="ph-fill ph-speaker-high text-sm"></i>
+          </button>
+          <input type="range" id="yt-vol" min="0" max="100" value="70">
+        </div>
+      </div>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
-    // ============================================================
-    // BACKGROUND SYSTEM
-    // ============================================================
-    const photoUrls = {
-        'photo-stars':    'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80',
-        'photo-forest':   'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80',
-        'photo-mountain': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80',
-        'photo-beach':    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80',
-        'photo-cafe':     'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1920&q=80',
-        'photo-rain':     'https://images.unsplash.com/photo-1428592953211-077101b2021b?auto=format&fit=crop&w=1920&q=80',
+      <!-- Rain -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-blue-300 amb-btn opacity-50 flex-shrink-0" data-s="rain"><i class="ph-fill ph-cloud-rain text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Tiếng Mưa</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="rain"></div>
+      </div>
+      <!-- Fire -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-orange-400 amb-btn opacity-50 flex-shrink-0" data-s="fire"><i class="ph-fill ph-fire text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Lửa Trại</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="fire"></div>
+      </div>
+      <!-- Waves -->
+      <div class="flex items-center gap-3.5">
+        <button class="gbtn w-10 h-10 rounded-full flex items-center justify-center text-cyan-300 amb-btn opacity-50 flex-shrink-0" data-s="waves"><i class="ph-fill ph-waves text-xl"></i></button>
+        <div class="flex-1"><div class="text-xs text-white/45 mb-1.5">Sóng Biển</div><input type="range" min="0" max="100" value="0" class="amb-sl" data-s="waves"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-3 text-white/20 text-xs">Space · play/pause &nbsp;·&nbsp; R · reset</footer>
+</main>
+
+<!-- TIME MODAL -->
+<div id="modal-time" class="modal-wrap">
+  <div class="glass modal-box rounded-2xl p-8 max-w-sm w-full mx-4">
+    <h3 class="text-xl mb-6 text-center" style="font-family:'Space Grotesk',sans-serif">Chọn thời gian</h3>
+    <div class="mb-6">
+      <div class="flex justify-between text-white/55 text-sm mb-2"><span>1p</span><span id="time-val" class="font-semibold text-white">25 phút</span><span>180p</span></div>
+      <input type="range" id="time-sl" min="1" max="180" value="25">
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="10">10 Phút</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="30">30 Phút</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="60">1 Giờ</button>
+      <button class="gbtn py-3 rounded-xl text-sm t-preset" data-t="180">3 Giờ</button>
+    </div>
+    <button id="time-close" class="mt-5 w-full py-3 rounded-xl bg-white/8 hover:bg-white/15 transition-colors text-sm">Lưu & Đóng</button>
+  </div>
+</div>
+
+<!-- YT PLAYLIST MODAL -->
+<div id="modal-pl" class="modal-wrap">
+  <div class="glass modal-box rounded-2xl p-6 max-w-sm w-full mx-4">
+    <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/8">
+      <div><h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Thư viện YouTube</h3><p class="text-xs text-white/35 mt-0.5">Dán link để thêm bài</p></div>
+      <button id="pl-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <input id="yt-url-in" type="text" placeholder="youtube.com/watch?v=..." class="flex-1 bg-white/6 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+      <button id="yt-url-add" class="px-3 py-2 bg-red-600/20 border border-red-400/25 text-red-300 rounded-xl text-xs hover:bg-red-600/30 transition-colors whitespace-nowrap">+ Thêm</button>
+    </div>
+    <div id="pl-list" class="flex flex-col gap-1.5 max-h-72 overflow-y-auto pr-0.5 scr"></div>
+  </div>
+</div>
+
+<!-- BG LIST MODAL -->
+<div id="modal-bg" class="modal-wrap">
+  <div class="glass modal-box rounded-2xl p-6 max-w-lg w-full mx-4">
+    <div class="flex justify-between items-center mb-5 pb-4 border-b border-white/8">
+      <div>
+        <h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Hình nền</h3>
+        <p class="text-xs text-white/35 mt-0.5">Chọn không gian của bạn</p>
+      </div>
+      <button id="bg-modal-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
+    </div>
+    <p class="text-xs text-white/35 uppercase tracking-widest mb-3">✦ Animated</p>
+    <div class="grid grid-cols-4 gap-2.5 mb-5" id="bg-anim-grid"></div>
+    <p class="text-xs text-white/35 uppercase tracking-widest mb-3">📷 Ảnh thực</p>
+    <div class="grid grid-cols-4 gap-2.5" id="bg-photo-grid"></div>
+  </div>
+</div>
+
+<!-- ADD PLAYLIST MODAL -->
+<div id="modal-add-pl" class="modal-wrap">
+  <div class="glass modal-box rounded-2xl p-6 max-w-sm w-full mx-4">
+    <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/8">
+      <div>
+        <h3 class="text-base font-semibold" style="font-family:'Space Grotesk',sans-serif">Thêm vào playlist</h3>
+        <p class="text-xs text-white/35 mt-0.5">Dán link YouTube / playlist</p>
+      </div>
+      <button id="add-pl-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <label class="text-xs text-white/45 mb-1.5 block">Link YouTube (video hoặc playlist)</label>
+        <input id="add-url-in" type="text" placeholder="youtube.com/watch?v=... hoặc ?list=..."
+          class="w-full bg-white/6 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+      </div>
+      <div>
+        <label class="text-xs text-white/45 mb-1.5 block">Tên hiển thị (tuỳ chọn)</label>
+        <input id="add-title-in" type="text" placeholder="Ví dụ: Lofi Study Mix..."
+          class="w-full bg-white/6 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+      </div>
+      <button id="add-pl-submit" class="w-full py-2.5 bg-red-600/20 border border-red-400/25 text-red-300 rounded-xl text-sm hover:bg-red-600/30 transition-colors font-medium mt-1">
+        <i class="ph-fill ph-plus-circle mr-1.5"></i>Thêm vào danh sách
+      </button>
+    </div>
+    <div class="mt-4 pt-4 border-t border-white/8">
+      <p class="text-xs text-white/35 mb-2.5 uppercase tracking-widest">Playlist hiện tại</p>
+      <div id="add-pl-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto scr"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+// ================================================================
+// BACKGROUND SYSTEM
+// ================================================================
+const bgCanvas = document.getElementById('bg-canvas');
+const bgPhoto  = document.getElementById('bg-photo');
+const bgCtx    = bgCanvas.getContext('2d');
+
+function resizeBg() {
+  bgCanvas.width = innerWidth;
+  bgCanvas.height = innerHeight;
+}
+window.addEventListener('resize', () => {
+  resizeBg();
+  // Re-init stars after canvas reset
+  if (animRaf) {
+    cancelAnimationFrame(animRaf);
+    animRaf = null;
+    const bg = BG_LIST[bgIdx];
+    if (bg && bg.id === 'stars') { initStars(); animateStars(); }
+    else if (bg && bg.id === 'neon') { initStars(); animateNeon(); }
+    else if (bg && bg.type === 'grad') { animateGrad(bg.colors); }
+  }
+});
+resizeBg();
+
+const BG_LIST = [
+  {id:'stars',    label:'✦ Sao rơi',   type:'canvas'},
+  {id:'galaxy',   label:'✦ Galaxy',    type:'grad', colors:['#0f0c29','#302b63','#24243e','#1a1a2e','#0f3460']},
+  {id:'aurora',   label:'✦ Cực quang', type:'grad', colors:['#001a0e','#003320','#0a4a1a','#052a30','#001a2e'], ptcl:['#00ff7f','#00e5ff']},
+  {id:'ocean',    label:'✦ Đại dương', type:'grad', colors:['#000428','#004e92','#000d2e','#003060'], ptcl:['#29b6f6','#0288d1']},
+  {id:'sunset',   label:'✦ Hoàng hôn', type:'grad', colors:['#1a0533','#3d0b00','#7c1900','#3d0b00','#1a0533'], ptcl:['#ff7043','#ffd54f']},
+  {id:'sakura',   label:'✦ Sakura',    type:'grad', colors:['#1a0a14','#3d1a2e','#6b2d4a','#2d0f24'], ptcl:['#ffb7c5','#ff8fa3','#ffc8dd']},
+  {id:'neon',     label:'✦ Neon',      type:'canvas'},
+  {id:'zen',      label:'✦ Zen',       type:'grad', colors:['#06060f','#0a0a18','#080810'], orb:true},
+  {id:'p-stars',  label:'📷 Bầu trời sao',  type:'photo', url:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80'},
+  {id:'p-forest', label:'📷 Rừng đêm',      type:'photo', url:'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80'},
+  {id:'p-mountain',label:'📷 Núi tuyết',    type:'photo', url:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80'},
+  {id:'p-beach',  label:'📷 Bãi biển',      type:'photo', url:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80'},
+  {id:'p-cafe',   label:'📷 Quán cafe',     type:'photo', url:'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1920&q=80'},
+  {id:'p-rain',   label:'📷 Mưa đêm',       type:'photo', url:'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1920&q=80'},
+];
+
+let bgIdx = 0;
+let animRaf = null;
+let gradT = 0;
+
+function clearEffects() {
+  if (animRaf) { cancelAnimationFrame(animRaf); animRaf = null; }
+  document.querySelectorAll('.ptcl, .zen-orb').forEach(e => e.remove());
+  bgPhoto.classList.remove('loaded');
+  bgPhoto.style.backgroundImage = '';
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+}
+
+// ---- Gradient animation ----
+function animateGrad(colors) {
+  const parsed = colors.map(hex => {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return [r,g,b];
+  });
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function lerpColor(c1,c2,t){ return c1.map((v,i)=>Math.round(lerp(v,c2[i],t))); }
+  function draw() {
+    gradT += 0.0008;
+    const w = bgCanvas.width, h = bgCanvas.height;
+    const t1 = (Math.sin(gradT) + 1) / 2;
+    const t2 = (Math.sin(gradT * 0.7 + 1) + 1) / 2;
+    const t3 = (Math.cos(gradT * 0.5) + 1) / 2;
+    const c1 = lerpColor(parsed[0], parsed[1 % parsed.length], t1);
+    const c2 = lerpColor(parsed[2 % parsed.length], parsed[3 % parsed.length], t2);
+    const c3 = lerpColor(parsed[Math.floor(parsed.length/2)], parsed[parsed.length-1], t3);
+    const grad = bgCtx.createLinearGradient(0, 0, w * (0.5 + Math.sin(gradT*0.3)*0.5), h);
+    grad.addColorStop(0, `rgb(${c1})`);
+    grad.addColorStop(0.5, `rgb(${c3})`);
+    grad.addColorStop(1, `rgb(${c2})`);
+    bgCtx.fillStyle = grad;
+    bgCtx.fillRect(0, 0, w, h);
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ---- Stars canvas ----
+let starList = [];
+function initStars() {
+  starList = Array.from({length:200}, () => ({
+    x: Math.random() * bgCanvas.width,
+    y: Math.random() * bgCanvas.height,
+    r: Math.random() * 1.4 + 0.2,
+    a: Math.random(),
+    spd: Math.random() * 0.004 + 0.001,
+    shoot: false
+  }));
+}
+let shootClock = 0;
+function animateStars() {
+  bgCtx.fillStyle = '#05030a';
+  bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+  shootClock++;
+  if (shootClock > 90 && Math.random() < 0.06) {
+    shootClock = 0;
+    starList.push({ shoot:true, x:Math.random()*bgCanvas.width*0.7, y:Math.random()*bgCanvas.height*0.35, a:1, sx:4+Math.random()*6, sy:2+Math.random()*4, sl:0, maxL:70+Math.random()*80 });
+  }
+  for (let i = starList.length - 1; i >= 0; i--) {
+    const s = starList[i];
+    if (s.shoot) {
+      bgCtx.beginPath(); bgCtx.strokeStyle=`rgba(255,255,255,${s.a})`; bgCtx.lineWidth=1.5;
+      bgCtx.moveTo(s.x,s.y); bgCtx.lineTo(s.x - s.sl*0.5, s.y - s.sl*0.28); bgCtx.stroke();
+      s.x+=s.sx; s.y+=s.sy; s.sl+=s.sx*0.8; s.a-=0.013;
+      if (s.a<=0 || s.sl>s.maxL) starList.splice(i,1);
+    } else {
+      s.a += s.spd * (Math.random()>0.5?1:-1);
+      s.a = Math.max(0.04, Math.min(1, s.a));
+      bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      bgCtx.fillStyle=`rgba(255,255,255,${s.a})`; bgCtx.fill();
+    }
+  }
+  animRaf = requestAnimationFrame(animateStars);
+}
+
+// ---- Neon canvas ----
+function animateNeon() {
+  let t = 0;
+  const nc = ['#ff00ff','#00ffff','#ff0080','#8000ff','#00ff80'];
+  function draw() {
+    bgCtx.fillStyle = 'rgba(3,2,14,0.18)';
+    bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    t += 0.006;
+    // grid
+    for (let i=0;i<5;i++) {
+      const x = (i/5)*bgCanvas.width + Math.sin(t+i*1.3)*15;
+      bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x,bgCanvas.height);
+      bgCtx.strokeStyle=`rgba(${i%2?0:100},${i%3?20:180},255,0.035)`; bgCtx.lineWidth=1; bgCtx.stroke();
+    }
+    // stars dim
+    for (let i=0;i<80;i++){
+      if(!starList[i]) continue;
+      const s=starList[i]; s.a+=s.spd*(Math.random()>0.5?1:-1); s.a=Math.max(0.02,Math.min(0.5,s.a));
+      bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r*0.6,0,Math.PI*2);
+      bgCtx.fillStyle=`rgba(180,180,255,${s.a})`; bgCtx.fill();
+    }
+    // neon orbs
+    for (let i=0;i<3;i++){
+      const x=bgCanvas.width*(0.2+i*0.3)+Math.sin(t*0.6+i*2.1)*70;
+      const y=bgCanvas.height*0.45+Math.cos(t*0.4+i*1.7)*90;
+      const rad=2.5+Math.abs(Math.sin(t*0.9+i))*3.5;
+      bgCtx.beginPath(); bgCtx.arc(x,y,rad,0,Math.PI*2);
+      bgCtx.fillStyle=nc[(i+Math.floor(t*0.3))%nc.length]; bgCtx.fill();
+      bgCtx.beginPath(); bgCtx.arc(x,y,rad*5,0,Math.PI*2);
+      bgCtx.strokeStyle=nc[(i+Math.floor(t*0.3))%nc.length]+'22'; bgCtx.lineWidth=1; bgCtx.stroke();
+    }
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ---- Particles ----
+function spawnParticles(colors) {
+  for (let i=0;i<22;i++){
+    const p=document.createElement('div'); p.className='ptcl';
+    const sz=Math.random()*7+2, color=colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;background:${color};animation-duration:${10+Math.random()*14}s;animation-delay:${Math.random()*9}s;filter:blur(${sz>5?0.8:0}px)`;
+    document.body.appendChild(p);
+  }
+}
+
+// ---- Zen orb ----
+function spawnZenOrb() {
+  [[300,0.25],[520,0.07]].forEach(([sz,op]) => {
+    const o=document.createElement('div'); o.className='zen-orb';
+    o.style.cssText=`left:50%;top:50%;width:${sz}px;height:${sz}px;background:radial-gradient(circle,rgba(60,60,140,${op}),transparent);border:1px solid rgba(100,100,200,0.08);animation-delay:${sz>400?1:0}s`;
+    document.body.appendChild(o);
+  });
+}
+
+// ---- MAIN applyBg ----
+function applyBg(idx) {
+  clearEffects();
+  bgIdx = idx;
+  const bg = BG_LIST[idx];
+  localStorage.setItem('zf-bg', bg.id);
+
+  const lbl = document.getElementById('bg-label');
+  lbl.textContent = bg.label;
+  clearTimeout(lbl._t);
+  lbl._t = setTimeout(() => { lbl.textContent = 'Chuyển hình nền'; }, 3000);
+
+  if (bg.type === 'canvas' && bg.id === 'stars') {
+    bgCtx.fillStyle='#05030a'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    initStars(); animateStars();
+  } else if (bg.type === 'canvas' && bg.id === 'neon') {
+    bgCtx.fillStyle='#03020e'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    initStars(); animateNeon();
+  } else if (bg.type === 'grad') {
+    animateGrad(bg.colors);
+    if (bg.ptcl) spawnParticles(bg.ptcl);
+    if (bg.orb) spawnZenOrb();
+  } else if (bg.type === 'photo') {
+    // Show dark canvas while loading
+    bgCtx.fillStyle='#05030a'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    // Fade in photo when ready
+    bgPhoto.style.backgroundImage = `url('${bg.url}')`;
+    const probe = new Image();
+    probe.onload = () => {
+      if (localStorage.getItem('zf-bg') === bg.id) bgPhoto.classList.add('loaded');
     };
+    probe.onerror = () => {
+      // fallback to galaxy gradient
+      if (localStorage.getItem('zf-bg') === bg.id) applyBg(1);
+    };
+    probe.src = bg.url;
+  }
+}
 
-    // Ordered list for next-bg cycling
-    const bgList = [
-        {id:'photo-stars',    label:'Bầu trời sao'},
-        {id:'photo-forest',   label:'Rừng đêm'},
-        {id:'photo-mountain', label:'Núi tuyết'},
-        {id:'photo-beach',    label:'Bãi biển'},
-        {id:'photo-cafe',     label:'Quán cafe'},
-        {id:'photo-rain',     label:'Mưa đêm'},
-        {id:'anim-galaxy',    label:'Galaxy ✦'},
-        {id:'anim-aurora',    label:'Cực quang'},
-        {id:'anim-sunset',    label:'Hoàng hôn'},
-        {id:'anim-ocean',     label:'Đại dương'},
-        {id:'anim-stars',     label:'Sao rơi ✦'},
-        {id:'anim-sakura',    label:'Sakura ✦'},
-        {id:'anim-zen',       label:'Zen Dark'},
-        {id:'anim-neon',      label:'Neon City ✦'},
-    ];
-    let currentBgIdx = 0;
+// next-bg listener moved to bottom
 
-    let starAnimFrame = null;
-    let neonAnimFrame = null;
-    const bgMain = document.getElementById('bg-main');
-    const starCanvas = document.getElementById('star-canvas');
-    const starCtx = starCanvas.getContext('2d');
+// Init from saved
+const savedBgId = localStorage.getItem('zf-bg') || 'stars';
+bgIdx = Math.max(0, BG_LIST.findIndex(b => b.id === savedBgId));
+applyBg(bgIdx);
 
-    function clearParticles() { document.querySelectorAll('.particle, #zen-orb').forEach(p => p.remove()); }
+// ================================================================
+// WEB AUDIO — AMBIENT (synthetic)
+// ================================================================
+let actx = null;
+const ambNodes = {};
 
-    function spawnParticles(c1, c2) {
-        clearParticles();
-        for (let i = 0; i < 20; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            const size = Math.random() * 7 + 2;
-            p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${Math.random()>0.5?c1:c2};animation-duration:${Math.random()*14+9}s;animation-delay:${Math.random()*8}s;filter:blur(${size>6?1:0}px)`;
-            document.body.appendChild(p);
-        }
+function getCtx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+function mkNoise(ctx, secs) {
+  const buf = ctx.createBuffer(1, ctx.sampleRate * secs, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true; return src;
+}
+
+// Rain: filtered white noise
+function mkRain(vol) {
+  const ctx=getCtx(), src=mkNoise(ctx,2);
+  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
+  const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=8000;
+  const g=ctx.createGain(); g.gain.value=vol*0.55;
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(ctx.destination); src.start();
+  return { g, stop(){try{src.stop()}catch(e){}} };
+}
+
+// Fire: two layers + timed crackle scheduling (no LFO->gain)
+function mkFire(vol) {
+  const ctx = getCtx();
+  // Layer 1: deep low rumble
+  const src1 = mkNoise(ctx, 3);
+  const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=450;
+  const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=220;
+  const g1  = ctx.createGain(); g1.gain.value = vol * 0.38;
+  src1.connect(lp1); lp1.connect(lp2); lp2.connect(g1); g1.connect(ctx.destination);
+  // Layer 2: crackle bursts (bandpass noise, gated)
+  const src2 = mkNoise(ctx, 1);
+  const bp   = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1100; bp.Q.value=0.9;
+  const g2   = ctx.createGain(); g2.gain.value=0;
+  src2.connect(bp); bp.connect(g2); g2.connect(ctx.destination);
+  src1.start(); src2.start();
+  // Schedule crackles with setValueAtTime — NO LFO modulation
+  let crackTimer;
+  function scheduleBurst() {
+    const now = ctx.currentTime;
+    const count = 5 + Math.floor(Math.random()*5);
+    for (let i=0;i<count;i++){
+      const t = now + Math.random()*1.4;
+      const amp = Math.random() * vol * 0.28;
+      const dur = 0.03 + Math.random()*0.07;
+      g2.gain.setValueAtTime(amp, t);
+      g2.gain.setValueAtTime(0, t + dur);
     }
+    crackTimer = setTimeout(scheduleBurst, 1000 + Math.random()*600);
+  }
+  scheduleBurst();
+  return {
+    g: g1,
+    _g2: g2, _vol: vol,
+    setVol(v){ g1.gain.setTargetAtTime(v*0.38, ctx.currentTime, 0.1); this._vol=v; },
+    stop(){ clearTimeout(crackTimer); try{src1.stop();src2.stop()}catch(e){} }
+  };
+}
 
-    let stars = [];
-    function resizeStarCanvas() { starCanvas.width = window.innerWidth; starCanvas.height = window.innerHeight; }
-    function initStars() {
-        stars = [];
-        for (let i = 0; i < 180; i++) stars.push({ x:Math.random()*starCanvas.width, y:Math.random()*starCanvas.height, r:Math.random()*1.5+0.2, alpha:Math.random(), speed:Math.random()*0.004+0.001, shooting:false });
+// Waves: layered bandpass noise with slow LFOs on gain (not on g.gain directly)
+function mkWaves(vol) {
+  const ctx=getCtx();
+  const master=ctx.createGain(); master.gain.value=vol*0.62; master.connect(ctx.destination);
+  const srcs=[],lfos=[];
+  for(let i=0;i<4;i++){
+    const src=mkNoise(ctx,3);
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=170+i*85; bp.Q.value=0.55;
+    const g=ctx.createGain(); g.gain.value=0.18+Math.random()*0.1;
+    // Use separate gain node for LFO so it multiplies, not adds
+    const lfoMod=ctx.createGain(); lfoMod.gain.value=0.22;
+    const lfo=ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.06+i*0.022;
+    // lfo → lfoMod controls an intermediate gain
+    const waveG=ctx.createGain(); waveG.gain.value=0.5;
+    lfo.connect(lfoMod); lfoMod.connect(waveG.gain);
+    src.connect(bp); bp.connect(g); g.connect(waveG); waveG.connect(master);
+    src.start(); lfo.start(); srcs.push(src); lfos.push(lfo);
+  }
+  return { g:master, stop(){ srcs.forEach(s=>{try{s.stop()}catch(e){}}); lfos.forEach(l=>{try{l.stop()}catch(e){}}) } };
+}
+
+const AMB_MK = {rain:mkRain, fire:mkFire, waves:mkWaves};
+
+function ambSetVol(s, vol) {
+  const n=ambNodes[s]; if(!n) return;
+  if (s==='fire' && n.setVol) { n.setVol(vol); return; }
+  const mult={rain:0.55,waves:0.62}[s]||0.5;
+  n.g.gain.setTargetAtTime(vol*mult, getCtx().currentTime, 0.1);
+}
+function ambStart(s, vol) { if(!ambNodes[s]) ambNodes[s]=AMB_MK[s](vol); }
+function ambStop(s) { if(ambNodes[s]){ ambNodes[s].stop(); delete ambNodes[s]; } }
+
+document.querySelectorAll('.amb-sl').forEach(sl => {
+  sl.addEventListener('input', e => {
+    const s=e.target.dataset.s, vol=parseInt(e.target.value)/100;
+    const btn=document.querySelector(`.amb-btn[data-s="${s}"]`);
+    if(vol>0){ btn.classList.remove('opacity-50'); btn.classList.add('amb-active'); ambStart(s,vol); ambSetVol(s,vol); }
+    else { btn.classList.add('opacity-50'); btn.classList.remove('amb-active'); ambStop(s); }
+    const v=JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[s]=parseInt(e.target.value); localStorage.setItem('zf-amb',JSON.stringify(v));
+  });
+});
+document.querySelectorAll('.amb-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const s=btn.dataset.s, sl=document.querySelector(`.amb-sl[data-s="${s}"]`);
+    if(btn.classList.contains('opacity-50')){ btn.classList.remove('opacity-50'); btn.classList.add('amb-active'); sl.value=50; ambStart(s,0.5); const v=JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[s]=50; localStorage.setItem('zf-amb',JSON.stringify(v)); }
+    else { btn.classList.add('opacity-50'); btn.classList.remove('amb-active'); sl.value=0; ambStop(s); const v=JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[s]=0; localStorage.setItem('zf-amb',JSON.stringify(v)); }
+  });
+});
+// Restore saved ambient
+const savedAmb=JSON.parse(localStorage.getItem('zf-amb')||'{}');
+Object.entries(savedAmb).forEach(([s,v])=>{ if(v>0){ const sl=document.querySelector(`.amb-sl[data-s="${s}"]`), bt=document.querySelector(`.amb-btn[data-s="${s}"]`); if(sl)sl.value=v; if(bt){bt.classList.remove('opacity-50');bt.classList.add('amb-active');} } });
+
+// ================================================================
+// YOUTUBE
+// ================================================================
+const YT_TRACKS = [
+  {id:'jfKfPfyJRdk', title:'lofi hip hop radio – beats to relax/study to', ch:'Lofi Girl'},
+  {id:'4xDzrJKXOOY', title:'synthwave radio – beats to chill/game to',      ch:'Lofi Girl'},
+  {id:'Na0w3Mz46GA', title:'Coffee Shop Jazz Lofi',                         ch:'Dreamy'},
+  {id:'lTRiuFIWV54', title:'lofi hip hop radio – chill beats',              ch:'ChillHop Music'},
+  {id:'7NOSDKb0HlU', title:'Deep Focus – Music For Studying',               ch:'Greenred Productions'},
+];
+let ytP=null, ytIdx=0, ytReady=false, ytVol=70, ytMuted=false, ytProgInt=null;
+
+function onYouTubeIframeAPIReady() {
+  ytP = new YT.Player('yt-player', {
+    height:'1', width:'1', videoId: YT_TRACKS[0].id,
+    playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1},
+    events:{
+      onReady: e => { ytReady=true; e.target.setVolume(ytVol); ytUpdateUI(0,false); },
+      onStateChange: e => {
+        if(e.data===YT.PlayerState.PLAYING){ document.getElementById('yt-icon').className='ph-fill ph-pause text-sm'; ytProgStart(); }
+        else if(e.data===YT.PlayerState.PAUSED){ document.getElementById('yt-icon').className='ph-fill ph-play text-sm'; ytProgStop(); }
+        else if(e.data===YT.PlayerState.ENDED){ ytProgStop(); setTimeout(()=>ytLoad((ytIdx+1)%YT_TRACKS.length,true),200); }
+      },
+      onError: () => setTimeout(()=>ytLoad((ytIdx+1)%YT_TRACKS.length,isRunning),2000)
     }
-    let shootTimer = 0;
-    function animateStars() {
-        starCtx.fillStyle = '#05030a';
-        starCtx.fillRect(0, 0, starCanvas.width, starCanvas.height);
-        shootTimer++;
-        if (shootTimer > 100 && Math.random() < 0.05) {
-            shootTimer = 0;
-            stars.push({ x:Math.random()*starCanvas.width*0.7, y:Math.random()*starCanvas.height*0.4, r:1.2, alpha:1, speed:0, shooting:true, sx:4+Math.random()*6, sy:2+Math.random()*4, sl:0, maxL:80+Math.random()*70 });
-        }
-        stars.forEach((s, i) => {
-            if (s.shooting) {
-                starCtx.beginPath(); starCtx.strokeStyle=`rgba(255,255,255,${s.alpha})`; starCtx.lineWidth=1.5;
-                starCtx.moveTo(s.x,s.y); starCtx.lineTo(s.x-s.sl*0.55,s.y-s.sl*0.3); starCtx.stroke();
-                s.x+=s.sx; s.y+=s.sy; s.sl+=s.sx; s.alpha-=0.014;
-                if (s.alpha<=0||s.sl>s.maxL) stars.splice(i,1);
-            } else {
-                s.alpha += s.speed*(Math.random()>0.5?1:-1);
-                s.alpha = Math.max(0.05,Math.min(1,s.alpha));
-                starCtx.beginPath(); starCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
-                starCtx.fillStyle=`rgba(255,255,255,${s.alpha})`; starCtx.fill();
-            }
-        });
-        starAnimFrame = requestAnimationFrame(animateStars);
+  });
+}
+function ytLoad(idx, auto) {
+  ytIdx=idx; ytUpdateUI(idx,true);
+  if(!ytReady||!ytP) return;
+  if(auto){ ytP.stopVideo(); setTimeout(()=>{ ytP.loadVideoById({videoId:YT_TRACKS[idx].id}); },120); }
+  else { ytP.cueVideoById({videoId:YT_TRACKS[idx].id}); document.getElementById('yt-icon').className='ph-fill ph-play text-sm'; }
+  ytRenderList();
+}
+function ytUpdateUI(idx, loading) {
+  const t=YT_TRACKS[idx];
+  document.getElementById('yt-title').textContent = loading ? '⏳ Đang tải...' : t.title;
+  document.getElementById('yt-ch').textContent = t.ch;
+  document.getElementById('yt-thumb').src = `https://img.youtube.com/vi/${t.id}/mqdefault.jpg`;
+  document.getElementById('yt-prog-fill').style.width = '0%';
+}
+function ytProgStart() {
+  ytProgStop();
+  ytProgInt = setInterval(() => {
+    try { const c=ytP.getCurrentTime(),d=ytP.getDuration(); if(d>0) document.getElementById('yt-prog-fill').style.width=(c/d*100).toFixed(1)+'%'; } catch(e){}
+  }, 800);
+}
+function ytProgStop() { if(ytProgInt){clearInterval(ytProgInt);ytProgInt=null;} }
+
+document.getElementById('yt-prog-wrap').addEventListener('click', e => {
+  if(!ytReady||!ytP) return;
+  const r=e.currentTarget.getBoundingClientRect(), d=ytP.getDuration();
+  if(d>0) ytP.seekTo((e.clientX-r.left)/r.width*d,true);
+});
+document.getElementById('yt-pp').addEventListener('click', () => {
+  if(!ytReady||!ytP) return;
+  if(ytP.getPlayerState()===YT.PlayerState.PLAYING) ytP.pauseVideo();
+  else { ytP.playVideo(); if(!isRunning) toggleTimer(); }
+});
+document.getElementById('yt-prev').addEventListener('click', ()=>ytLoad((ytIdx-1+YT_TRACKS.length)%YT_TRACKS.length, isRunning));
+document.getElementById('yt-next').addEventListener('click', ()=>ytLoad((ytIdx+1)%YT_TRACKS.length, isRunning));
+document.getElementById('yt-vol').addEventListener('input', e => {
+  ytVol=parseInt(e.target.value); if(ytReady&&ytP) ytP.setVolume(ytVol);
+  ytMuted=ytVol===0; document.getElementById('yt-mute-icon').className=ytMuted?'ph-fill ph-speaker-slash text-sm':'ph-fill ph-speaker-high text-sm';
+});
+document.getElementById('yt-mute-btn').addEventListener('click', () => {
+  if(ytMuted){ ytVol=70;ytMuted=false;document.getElementById('yt-vol').value=70;if(ytReady&&ytP){ytP.unMute();ytP.setVolume(70);}document.getElementById('yt-mute-icon').className='ph-fill ph-speaker-high text-sm'; }
+  else { ytMuted=true;document.getElementById('yt-vol').value=0;if(ytReady&&ytP)ytP.mute();document.getElementById('yt-mute-icon').className='ph-fill ph-speaker-slash text-sm'; }
+});
+
+// Playlist modal
+const mPl=document.getElementById('modal-pl');
+function openPl(){ ytRenderList(); mPl.classList.add('open'); }
+function closePl(){ mPl.classList.remove('open'); }
+document.getElementById('yt-open-pl').addEventListener('click', openPl);
+document.getElementById('pl-close').addEventListener('click', closePl);
+mPl.addEventListener('click', e=>{ if(e.target===mPl) closePl(); });
+document.getElementById('yt-url-add').addEventListener('click', () => {
+  const inp=document.getElementById('yt-url-in'), m=inp.value.trim().match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  if(!m){alert('Link không hợp lệ!');return;}
+  const id=m[1];
+  if(YT_TRACKS.find(t=>t.id===id)){alert('Đã có trong danh sách!');return;}
+  YT_TRACKS.push({id,title:`Video: ${id}`,ch:'YouTube'});
+  inp.value=''; ytRenderList(); ytLoad(YT_TRACKS.length-1,isRunning); closePl();
+});
+function ytRenderList() {
+  const c=document.getElementById('pl-list'); c.innerHTML='';
+  YT_TRACKS.forEach((t,i)=>{
+    const a=i===ytIdx, btn=document.createElement('button');
+    btn.className=`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 transition-all ${a?'bg-red-600/15 border border-red-400/25':'bg-white/4 border border-transparent hover:bg-white/10'}`;
+    btn.innerHTML=`<img src="https://img.youtube.com/vi/${t.id}/mqdefault.jpg" class="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-white/10"><div class="flex-1 min-w-0"><p class="text-xs font-medium truncate ${a?'text-white':'text-white/65'}">${t.title}</p><p class="text-xs text-white/30 truncate">${t.ch}</p></div>${a?'<i class="ph-fill ph-waveform text-red-300 text-sm flex-shrink-0 animate-pulse"></i>':''}`;
+    btn.onclick=()=>{ ytLoad(i,true); closePl(); if(!isRunning)toggleTimer(); };
+    c.appendChild(btn);
+  });
+}
+
+// ================================================================
+// QUOTES
+// ================================================================
+const QUOTES=['Hít vào tâm tĩnh lặng, thở ra miệng mỉm cười.','Sự bình yên đến từ bên trong, đừng tìm nó ở bên ngoài.','Hãy để mọi thứ trôi qua như những đám mây trên bầu trời.','Mỗi khoảnh khắc là một cơ hội để bắt đầu lại.','Tập trung vào hiện tại là chiếc chìa khóa của hạnh phúc.','Không có con đường dẫn đến hạnh phúc, hạnh phúc chính là con đường.','Tĩnh lặng không phải là trống rỗng, nó chứa đầy những câu trả lời.'];
+const qEl=document.getElementById('quote');
+function rotateQuote(){ qEl.style.opacity=0; setTimeout(()=>{ qEl.textContent=`"${QUOTES[Math.floor(Math.random()*QUOTES.length)]}"`; qEl.style.opacity=1; },500); }
+setInterval(rotateQuote,15000); rotateQuote();
+
+// ================================================================
+// TIMER
+// ================================================================
+let dur=25*60, rem=25*60, tInt=null, isRunning=false;
+const CIRC=47*2*Math.PI;
+const ringEl=document.getElementById('ring');
+ringEl.style.strokeDasharray=`${CIRC} ${CIRC}`;
+
+function fmtTime(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60; return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`; }
+function updateDisp(){ document.getElementById('t-display').textContent=fmtTime(rem); ringEl.style.strokeDashoffset=CIRC-(rem/dur)*CIRC; }
+
+function audioPlay() {
+  getCtx();
+  const saved=JSON.parse(localStorage.getItem('zf-amb')||'{}');
+  Object.entries(saved).forEach(([s,v])=>{ if(v>0&&!ambNodes[s]) ambStart(s,v/100); });
+  if(ytReady&&ytP&&ytP.getPlayerState()!==YT.PlayerState.PLAYING) ytP.playVideo();
+}
+function audioPause() {
+  if(ytReady&&ytP) ytP.pauseVideo();
+  Object.keys(ambNodes).forEach(s=>{ ambNodes[s].stop(); delete ambNodes[s]; });
+}
+
+function toggleTimer() {
+  if(isRunning){
+    clearInterval(tInt); audioPause();
+    document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1';
+    document.getElementById('t-status').textContent='Tạm dừng';
+  } else {
+    if(rem===0) rem=dur;
+    audioPlay();
+    tInt=setInterval(()=>{
+      rem--; updateDisp();
+      if(rem<=0){
+        clearInterval(tInt); isRunning=false;
+        document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1';
+        document.getElementById('t-status').textContent='Hoàn thành!';
+        audioPause();
+        const toast=document.createElement('div');
+        toast.className='fixed top-4 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-6 py-3 rounded-full shadow-xl font-medium z-50 animate-bounce text-sm';
+        toast.textContent='🔔 Đã hết thời gian! Nghỉ ngơi nhé.';
+        document.body.appendChild(toast); setTimeout(()=>toast.remove(),5000);
+      }
+    },1000);
+    document.getElementById('play-icon').className='ph-fill ph-pause text-3xl';
+    document.getElementById('t-status').textContent='Đang tập trung';
+  }
+  isRunning=!isRunning;
+}
+function resetTimer(){ clearInterval(tInt); isRunning=false; rem=dur; audioPause(); document.getElementById('play-icon').className='ph-fill ph-play text-3xl ml-1'; document.getElementById('t-status').textContent='Sẵn sàng'; updateDisp(); }
+
+document.getElementById('btn-play').addEventListener('click', toggleTimer);
+document.getElementById('btn-reset').addEventListener('click', resetTimer);
+document.addEventListener('keydown', e=>{ if(e.code==='Space'){e.preventDefault();toggleTimer();}if(e.key.toLowerCase()==='r')resetTimer(); });
+
+// Time modal
+const mTime=document.getElementById('modal-time');
+document.getElementById('btn-timer').addEventListener('click', ()=>mTime.classList.add('open'));
+document.getElementById('time-close').addEventListener('click', ()=>mTime.classList.remove('open'));
+mTime.addEventListener('click', e=>{ if(e.target===mTime)mTime.classList.remove('open'); });
+document.getElementById('time-sl').addEventListener('input', e=>{ document.getElementById('time-val').textContent=`${e.target.value} phút`; dur=e.target.value*60; resetTimer(); });
+document.querySelectorAll('.t-preset').forEach(btn=>btn.addEventListener('click', e=>{ const m=parseInt(e.currentTarget.dataset.t); document.getElementById('time-sl').value=m; document.getElementById('time-val').textContent=`${m} phút`; dur=m*60; resetTimer(); mTime.classList.remove('open'); }));
+
+updateDisp();
+ytUpdateUI(0,false);
+
+// ================================================================
+// BG LIST MODAL
+// ================================================================
+const mBg = document.getElementById('modal-bg');
+document.getElementById('btn-bg-list').addEventListener('click', () => {
+  renderBgGrid();
+  mBg.classList.add('open');
+});
+document.getElementById('bg-modal-close').addEventListener('click', () => mBg.classList.remove('open'));
+mBg.addEventListener('click', e => { if(e.target===mBg) mBg.classList.remove('open'); });
+
+function renderBgGrid() {
+  const animGrid  = document.getElementById('bg-anim-grid');
+  const photoGrid = document.getElementById('bg-photo-grid');
+  animGrid.innerHTML = ''; photoGrid.innerHTML = '';
+  BG_LIST.forEach((bg, i) => {
+    const isActive = i === bgIdx;
+    const btn = document.createElement('button');
+    btn.className = `rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${isActive ? 'border-white shadow-[0_0_0_2px_rgba(255,255,255,0.3)]' : 'border-transparent hover:border-white/30'}`;
+    btn.style.aspectRatio = '16/9';
+    if (bg.type === 'photo') {
+      btn.innerHTML = `<img src="${bg.url.replace('w=1920','w=300')}" class="w-full h-full object-cover" loading="lazy"><div class="absolute inset-0 bg-black/20 flex items-end p-1.5"><span class="text-white/80 text-xs leading-tight line-clamp-2">${bg.label.replace('📷 ','')}</span></div>`;
+      btn.style.position = 'relative';
+    } else {
+      // Gradient preview
+      const colors = bg.colors || ['#0f0c29','#24243e'];
+      const grad = `linear-gradient(135deg, ${colors.join(',')})`;
+      btn.innerHTML = `<div class="w-full h-full flex items-end p-1.5" style="background:${grad}"><span class="text-white/80 text-xs leading-tight">${bg.label.replace('✦ ','')}</span></div>`;
     }
+    btn.addEventListener('click', () => { applyBg(i); mBg.classList.remove('open'); });
+    (bg.type === 'photo' ? photoGrid : animGrid).appendChild(btn);
+  });
+}
 
-    function applyBackground(bgId) {
-        localStorage.setItem('zenflow-bg', bgId);
-        if (starAnimFrame) { cancelAnimationFrame(starAnimFrame); starAnimFrame=null; }
-        starCanvas.style.display = 'none';
-        clearParticles();
-        if (neonAnimFrame) { cancelAnimationFrame(neonAnimFrame); neonAnimFrame=null; }
+// ================================================================
+// ADD PLAYLIST MODAL
+// ================================================================
+const mAddPl = document.getElementById('modal-add-pl');
+document.getElementById('btn-add-playlist').addEventListener('click', () => {
+  renderAddPlList();
+  mAddPl.classList.add('open');
+});
+document.getElementById('add-pl-close').addEventListener('click', () => mAddPl.classList.remove('open'));
+mAddPl.addEventListener('click', e => { if(e.target===mAddPl) mAddPl.classList.remove('open'); });
 
-        bgMain.className = '';
-        bgMain.style.cssText = '';
+document.getElementById('add-pl-submit').addEventListener('click', () => {
+  const urlIn   = document.getElementById('add-url-in');
+  const titleIn = document.getElementById('add-title-in');
+  const raw     = urlIn.value.trim();
+  if (!raw) return;
 
-        if (bgId.startsWith('photo-')) {
-            bgMain.style.cssText = `position:fixed;top:-5%;left:-5%;width:110%;height:110%;background-size:cover;background-position:center;z-index:0;animation:panBg 60s infinite alternate linear;filter:brightness(0.55) contrast(1.1);background-image:url('${photoUrls[bgId]}')`;
-        } else if (bgId === 'anim-galaxy') {
-            bgMain.className = 'bg-gradient-anim';
-        } else if (bgId === 'anim-aurora') {
-            bgMain.className = 'bg-aurora';
-            spawnParticles('#00ff7f','#00e5ff');
-        } else if (bgId === 'anim-sunset') {
-            bgMain.className = 'bg-sunset';
-            spawnParticles('#ff7043','#ffd54f');
-        } else if (bgId === 'anim-ocean') {
-            bgMain.className = 'bg-ocean';
-            spawnParticles('#29b6f6','#0288d1');
-        } else if (bgId === 'anim-stars') {
-            bgMain.style.cssText = 'display:none';
-            starCanvas.style.display = 'block';
-            resizeStarCanvas(); initStars(); animateStars();
-        } else if (bgId === 'anim-sakura') {
-            bgMain.className = 'bg-sakura';
-            spawnSakura();
-        } else if (bgId === 'anim-zen') {
-            bgMain.className = 'bg-zen';
-            spawnBreathingOrb();
-        } else if (bgId === 'anim-neon') {
-            bgMain.className = 'bg-neon';
-            bgMain.style.cssText = '';
-            bgMain.className = 'bg-neon';
-            starCanvas.style.display = 'block';
-            resizeStarCanvas(); animateNeon();
-        }
+  // Extract video ID
+  const vm = raw.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  if (!vm) { alert('Link không hợp lệ! Vui lòng dán link video YouTube.'); return; }
+  const id = vm[1];
+  if (YT_TRACKS.find(t => t.id === id)) { alert('Bài này đã có trong danh sách rồi!'); urlIn.value=''; titleIn.value=''; return; }
 
-        // Update label
-        const found = bgList.find(b => b.id === bgId);
-        const lbl = document.getElementById('bg-label');
-        if (lbl && found) { lbl.textContent = found.label; }
+  const title = titleIn.value.trim() || `Video: ${id}`;
+  YT_TRACKS.push({ id, title, ch: 'YouTube' });
+  urlIn.value = ''; titleIn.value = '';
+  renderAddPlList();
+  // Also refresh yt playlist modal if open
+  if (document.getElementById('modal-pl').classList.contains('open')) ytRenderList();
+  // Load and play the new track
+  ytLoad(YT_TRACKS.length - 1, isRunning);
+});
 
-        // Update currentBgIdx
-        const idx = bgList.findIndex(b => b.id === bgId);
-        if (idx >= 0) currentBgIdx = idx;
-
-        document.querySelectorAll('.bg-option').forEach(btn => btn.classList.toggle('active', btn.dataset.bg === bgId));
+function renderAddPlList() {
+  const list = document.getElementById('add-pl-list');
+  list.innerHTML = '';
+  YT_TRACKS.forEach((t, i) => {
+    const isActive = i === ytIdx;
+    const row = document.createElement('div');
+    row.className = `flex items-center gap-2.5 px-2.5 py-2 rounded-xl ${isActive ? 'bg-red-600/12 border border-red-400/20' : 'bg-white/4 border border-transparent'}`;
+    row.innerHTML = `
+      <img src="https://img.youtube.com/vi/${t.id}/mqdefault.jpg" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium truncate ${isActive?'text-white':'text-white/65'}">${t.title}</p>
+        <p class="text-xs text-white/30 truncate">${t.ch}</p>
+      </div>
+      ${isActive ? '<i class="ph-fill ph-waveform text-red-300 text-xs flex-shrink-0 animate-pulse"></i>' : `<button class="text-white/20 hover:text-red-400 transition-colors flex-shrink-0" data-del="${i}"><i class="ph ph-trash text-xs"></i></button>`}
+    `;
+    // Delete button
+    const delBtn = row.querySelector('[data-del]');
+    if (delBtn) {
+      delBtn.addEventListener('click', () => {
+        YT_TRACKS.splice(i, 1);
+        if (ytIdx >= YT_TRACKS.length) { ytIdx = YT_TRACKS.length - 1; }
+        renderAddPlList();
+        if (document.getElementById('modal-pl').classList.contains('open')) ytRenderList();
+      });
     }
+    list.appendChild(row);
+  });
+}
 
-    window.addEventListener('resize', () => { resizeStarCanvas(); initStars(); });
-
-    // --- Sakura petals ---
-    function spawnSakura() {
-        clearParticles();
-        for (let i = 0; i < 25; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            const size = Math.random() * 8 + 4;
-            const colors = ['#ffb7c5','#ff8fa3','#ffccd5','#ffc8dd','#e8a0bf'];
-            p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;border-radius:${Math.random()>0.5?'50% 0':'50%'};background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*10}s;opacity:0`;
-            document.body.appendChild(p);
-        }
-    }
-
-    // --- Breathing orb for Zen ---
-    function spawnBreathingOrb() {
-        clearParticles();
-        const orb = document.createElement('div');
-        orb.id = 'zen-orb';
-        orb.style.cssText = `position:fixed;top:50%;left:50%;width:300px;height:300px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(60,60,120,0.15),transparent);border:1px solid rgba(100,100,200,0.1);animation:zenBreath 6s ease-in-out infinite;z-index:1;pointer-events:none`;
-        document.body.appendChild(orb);
-        const orb2 = document.createElement('div');
-        orb2.style.cssText = `position:fixed;top:50%;left:50%;width:500px;height:500px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(40,40,80,0.08),transparent);border:1px solid rgba(80,80,160,0.06);animation:zenBreath 6s ease-in-out infinite 1s;z-index:1;pointer-events:none`;
-        document.body.appendChild(orb2);
-    }
-
-    // --- Neon city canvas ---
-    let neonAnimFrame = null;
-    function animateNeon() {
-        const ctx = starCtx;
-        let t = 0;
-        const neonColors = ['#ff00ff','#00ffff','#ff0080','#8000ff','#0080ff','#ff8000'];
-        function draw() {
-            ctx.fillStyle = 'rgba(5,5,16,0.15)';
-            ctx.fillRect(0,0,starCanvas.width,starCanvas.height);
-            t += 0.008;
-            // Neon grid lines
-            for (let i = 0; i < 6; i++) {
-                const x = (i / 6) * starCanvas.width + Math.sin(t + i) * 20;
-                ctx.beginPath();
-                ctx.moveTo(x, 0); ctx.lineTo(x, starCanvas.height);
-                ctx.strokeStyle = `rgba(${i%2?0:255},${i%3?0:200},255,0.04)`;
-                ctx.lineWidth = 1; ctx.stroke();
-            }
-            // Floating neon dots
-            for (let i = 0; i < 3; i++) {
-                const x = starCanvas.width * (0.2 + i * 0.3) + Math.sin(t * 0.7 + i * 2) * 60;
-                const y = starCanvas.height * 0.5 + Math.cos(t * 0.5 + i) * 80;
-                const r = 2 + Math.abs(Math.sin(t + i)) * 3;
-                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-                ctx.fillStyle = neonColors[(i + Math.floor(t)) % neonColors.length];
-                ctx.fill();
-                // Glow ring
-                ctx.beginPath(); ctx.arc(x, y, r * 4, 0, Math.PI*2);
-                ctx.strokeStyle = neonColors[(i + Math.floor(t)) % neonColors.length].replace('ff','33');
-                ctx.lineWidth = 1; ctx.stroke();
-            }
-            // Stars
-            if (stars.length < 60) initStars();
-            stars.slice(0,60).forEach(s => {
-                s.alpha += s.speed * (Math.random() > 0.5 ? 1 : -1);
-                s.alpha = Math.max(0.05, Math.min(0.6, s.alpha));
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.7, 0, Math.PI*2);
-                ctx.fillStyle = `rgba(180,180,255,${s.alpha})`; ctx.fill();
-            });
-            neonAnimFrame = requestAnimationFrame(draw);
-        }
-        draw();
-    }
-
-    // Next background button
-    const bgNextBtn = document.getElementById('bg-next-btn');
-    if (bgNextBtn) {
-        bgNextBtn.addEventListener('click', () => {
-            currentBgIdx = (currentBgIdx + 1) % bgList.length;
-            applyBackground(bgList[currentBgIdx].id);
-            // Flash label
-            const lbl = document.getElementById('bg-label');
-            if (lbl) { lbl.style.opacity='1'; clearTimeout(lbl._t); lbl._t=setTimeout(()=>lbl.style.opacity='0.3',2000); }
-            // Rotate icon briefly
-            bgNextBtn.style.transform = 'rotate(360deg)';
-            bgNextBtn.style.transition = 'transform 0.4s ease';
-            setTimeout(() => { bgNextBtn.style.transform=''; bgNextBtn.style.transition=''; }, 400);
-        });
-    }
-
-    const bgModal = document.getElementById('bg-modal');
-    document.getElementById('bg-picker-btn').addEventListener('click', () => bgModal.classList.remove('opacity-0','pointer-events-none'));
-    document.getElementById('close-bg-modal').addEventListener('click', () => bgModal.classList.add('opacity-0','pointer-events-none'));
-    bgModal.addEventListener('click', e => { if(e.target===bgModal) bgModal.classList.add('opacity-0','pointer-events-none'); });
-    document.querySelectorAll('.bg-option').forEach(btn => btn.addEventListener('click', () => applyBackground(btn.dataset.bg)));
-
-    resizeStarCanvas(); initStars();
-    const _savedBg = localStorage.getItem('zenflow-bg') || 'photo-stars';
-    currentBgIdx = Math.max(0, bgList.findIndex(b => b.id === _savedBg));
-    applyBackground(_savedBg);
-
-    // ============================================================
-    // WEB AUDIO — AMBIENT SOUNDS (synthetic, no files needed)
-    // ============================================================
-    let audioCtx = null;
-    const ambientNodes = {};
-
-    function getCtx() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        return audioCtx;
-    }
-
-    function makeNoise(ctx, dur) {
-        const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random()*2-1;
-        const src = ctx.createBufferSource();
-        src.buffer = buf; src.loop = true;
-        return src;
-    }
-
-    function createRain(vol) {
-        const ctx = getCtx();
-        const src = makeNoise(ctx, 2);
-        const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1600;
-        const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=9000;
-        const gain = ctx.createGain(); gain.gain.value = vol * 0.55;
-        src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
-        src.start();
-        return { gain, stop(){ try{src.stop()}catch(e){} } };
-    }
-
-    function createFire(vol) {
-        const ctx = getCtx();
-        // Layer 1: base rumble (low noise)
-        const src1 = makeNoise(ctx, 2);
-        const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=500;
-        const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=250;
-        const g1 = ctx.createGain(); g1.gain.value = vol * 0.4;
-        src1.connect(lp1); lp1.connect(lp2); lp2.connect(g1); g1.connect(ctx.destination);
-        // Layer 2: crackle (mid noise burst via separate gain modulation)
-        const src2 = makeNoise(ctx, 1);
-        const hp = ctx.createBiquadFilter(); hp.type='bandpass'; hp.frequency.value=1200; hp.Q.value=0.8;
-        const g2 = ctx.createGain(); g2.gain.value = 0;
-        src2.connect(hp); hp.connect(g2); g2.connect(ctx.destination);
-        // Simulate random crackles via setValueAtTime scheduling
-        const masterGain = ctx.createGain(); masterGain.gain.value = vol;
-        function scheduleCrackles() {
-            const now = ctx.currentTime;
-            for (let i = 0; i < 8; i++) {
-                const t = now + Math.random() * 1.5;
-                const amp = Math.random() * vol * 0.3;
-                g2.gain.setValueAtTime(amp, t);
-                g2.gain.setValueAtTime(0, t + 0.04 + Math.random() * 0.06);
-            }
-        }
-        scheduleCrackles();
-        const crackleTimer = setInterval(scheduleCrackles, 1200);
-        src1.start(); src2.start();
-        return {
-            gain: g1,
-            _g2: g2, _vol: vol,
-            setVol(v) { g1.gain.setTargetAtTime(v*0.4, ctx.currentTime, 0.1); },
-            stop(){ clearInterval(crackleTimer); try{src1.stop();src2.stop()}catch(e){} }
-        };
-    }
-
-    function createWaves(vol) {
-        const ctx = getCtx();
-        const master = ctx.createGain(); master.gain.value = vol * 0.65;
-        master.connect(ctx.destination);
-        const srcs = [], lfos = [];
-        for (let i=0; i<4; i++) {
-            const src = makeNoise(ctx, 3);
-            const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=180+i*90; bp.Q.value=0.6;
-            const g = ctx.createGain(); g.gain.value=0.22;
-            const lfo = ctx.createOscillator(); lfo.frequency.value=0.07+i*0.025;
-            const lg = ctx.createGain(); lg.gain.value=0.25;
-            lfo.connect(lg); lg.connect(g.gain);
-            src.connect(bp); bp.connect(g); g.connect(master);
-            src.start(); lfo.start(); srcs.push(src); lfos.push(lfo);
-        }
-        return { gain:master, stop(){ srcs.forEach(s=>{try{s.stop()}catch(e){}});lfos.forEach(l=>{try{l.stop()}catch(e){}}) } };
-    }
-
-    const creators = { rain:createRain, fire:createFire, waves:createWaves };
-
-    function setVol(sound, vol) {
-        const n = ambientNodes[sound];
-        if (!n) return;
-        if (sound === 'fire' && n.setVol) { n.setVol(vol); return; }
-        n.gain.gain.setTargetAtTime(vol * {rain:0.55,waves:0.65}[sound] || vol*0.5, getCtx().currentTime, 0.1);
-    }
-
-    document.querySelectorAll('.ambient-slider').forEach(slider => {
-        slider.addEventListener('input', e => {
-            const sound = e.target.dataset.sound, vol = parseInt(e.target.value)/100;
-            const btn = document.querySelector(`.ambient-toggle[data-sound="${sound}"]`);
-            if (vol > 0) {
-                btn.classList.remove('opacity-50'); btn.classList.add('audio-active');
-                if (!ambientNodes[sound]) ambientNodes[sound] = creators[sound](vol);
-                else setVol(sound, vol);
-            } else {
-                btn.classList.add('opacity-50'); btn.classList.remove('audio-active');
-                if (ambientNodes[sound]) { ambientNodes[sound].stop(); delete ambientNodes[sound]; }
-            }
-            const v = JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[sound]=parseInt(e.target.value);
-            localStorage.setItem('zf-amb', JSON.stringify(v));
-        });
-    });
-
-    document.querySelectorAll('.ambient-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sound = btn.dataset.sound;
-            const slider = document.querySelector(`.ambient-slider[data-sound="${sound}"]`);
-            if (btn.classList.contains('opacity-50')) {
-                btn.classList.remove('opacity-50'); btn.classList.add('audio-active');
-                slider.value = 50;
-                ambientNodes[sound] = creators[sound](0.5);
-                const v = JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[sound]=50; localStorage.setItem('zf-amb',JSON.stringify(v));
-            } else {
-                btn.classList.add('opacity-50'); btn.classList.remove('audio-active');
-                slider.value = 0;
-                if (ambientNodes[sound]) { ambientNodes[sound].stop(); delete ambientNodes[sound]; }
-                const v = JSON.parse(localStorage.getItem('zf-amb')||'{}'); v[sound]=0; localStorage.setItem('zf-amb',JSON.stringify(v));
-            }
-        });
-    });
-
-    // Restore saved
-    const savedAmb = JSON.parse(localStorage.getItem('zf-amb')||'{}');
-    Object.entries(savedAmb).forEach(([s,v]) => {
-        if (v>0) {
-            const sl = document.querySelector(`.ambient-slider[data-sound="${s}"]`);
-            const bt = document.querySelector(`.ambient-toggle[data-sound="${s}"]`);
-            if(sl) sl.value=v; if(bt){bt.classList.remove('opacity-50');bt.classList.add('audio-active');}
-        }
-    });
-
-    // ============================================================
-    // YOUTUBE
-    // ============================================================
-    const ytTracks = [
-        {id:'jfKfPfyJRdk',title:'lofi hip hop radio – beats to relax/study to',channel:'Lofi Girl'},
-        {id:'4xDzrJKXOOY',title:'synthwave radio – beats to chill/game to',channel:'Lofi Girl'},
-        {id:'Na0w3Mz46GA',title:'Coffee Shop Jazz Lofi',channel:'Dreamy'},
-        {id:'lTRiuFIWV54',title:'lofi hip hop radio – chill beats',channel:'ChillHop Music'},
-        {id:'7NOSDKb0HlU',title:'Deep Focus – Music For Studying',channel:'Greenred Productions'},
-    ];
-    let ytPlayer=null, ytIdx=0, ytReady=false, ytVol=70, ytMuted=false, ytPI=null;
-
-    function onYouTubeIframeAPIReady(){
-        ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',videoId:ytTracks[0].id,
-        playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1},
-        events:{onReady:e=>{ytReady=true;e.target.setVolume(ytVol);updateYtUI(0,false);},
-            onStateChange:e=>{
-                if(e.data===YT.PlayerState.PLAYING){document.getElementById('yt-play-icon').className='ph-fill ph-pause text-sm';startYtP();}
-                else if(e.data===YT.PlayerState.PAUSED){document.getElementById('yt-play-icon').className='ph-fill ph-play text-sm';stopYtP();}
-                else if(e.data===YT.PlayerState.ENDED){
-                    // chặn YouTube tự nhảy related — tự handle next trong playlist của mình
-                    setTimeout(()=>loadYt((ytIdx+1)%ytTracks.length,true),300);
-                }
-            },
-            onError:()=>setTimeout(()=>loadYt((ytIdx+1)%ytTracks.length,isRunning),2000)
-        }});
-    }
-
-    function loadYt(idx,auto){
-        ytIdx=idx; updateYtUI(idx,true);
-        if(!ytReady||!ytPlayer) return;
-        if(auto){
-            // stopVideo trước rồi mới load — ngăn YouTube tự phát related
-            ytPlayer.stopVideo();
-            setTimeout(()=>ytPlayer.loadVideoById({videoId:ytTracks[idx].id}),100);
-        } else {
-            ytPlayer.cueVideoById({videoId:ytTracks[idx].id});
-            document.getElementById('yt-play-icon').className='ph-fill ph-play text-sm';
-        }
-        renderYtList();
-    }
-    function updateYtUI(idx,loading){
-        const t=ytTracks[idx];
-        document.getElementById('yt-title').textContent=loading?'⏳ Đang tải...':t.title;
-        document.getElementById('yt-channel').textContent=t.channel;
-        document.getElementById('yt-thumb').src=`https://img.youtube.com/vi/${t.id}/mqdefault.jpg`;
-        document.getElementById('yt-progress-fill').style.width='0%';
-    }
-    function startYtP(){stopYtP();ytPI=setInterval(()=>{try{const c=ytPlayer.getCurrentTime(),d=ytPlayer.getDuration();if(d>0)document.getElementById('yt-progress-fill').style.width=(c/d*100).toFixed(1)+'%';}catch(e){}},800);}
-    function stopYtP(){if(ytPI){clearInterval(ytPI);ytPI=null;}}
-
-    document.getElementById('yt-progress-container').addEventListener('click',e=>{
-        if(!ytReady||!ytPlayer)return;
-        const r=e.currentTarget.getBoundingClientRect(),d=ytPlayer.getDuration();
-        if(d>0)ytPlayer.seekTo((e.clientX-r.left)/r.width*d,true);
-    });
-    document.getElementById('yt-play-pause').addEventListener('click',()=>{
-        if(!ytReady||!ytPlayer)return;
-        if(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING)ytPlayer.pauseVideo();
-        else{ytPlayer.playVideo();if(!isRunning)toggleTimer();}
-    });
-    document.getElementById('yt-prev').addEventListener('click',()=>loadYt((ytIdx-1+ytTracks.length)%ytTracks.length,isRunning));
-    document.getElementById('yt-next').addEventListener('click',()=>loadYt((ytIdx+1)%ytTracks.length,isRunning));
-    document.getElementById('yt-volume').addEventListener('input',e=>{
-        ytVol=parseInt(e.target.value);
-        if(ytReady&&ytPlayer)ytPlayer.setVolume(ytVol);
-        ytMuted=ytVol===0;
-        document.querySelector('#yt-toggle i').className=ytVol===0?'ph-fill ph-speaker-slash text-sm':'ph-fill ph-speaker-high text-sm';
-    });
-    document.getElementById('yt-toggle').addEventListener('click',()=>{
-        if(ytMuted){ytVol=70;ytMuted=false;document.getElementById('yt-volume').value=70;if(ytReady&&ytPlayer){ytPlayer.unMute();ytPlayer.setVolume(70);}document.querySelector('#yt-toggle i').className='ph-fill ph-speaker-high text-sm';}
-        else{ytMuted=true;document.getElementById('yt-volume').value=0;if(ytReady&&ytPlayer)ytPlayer.mute();document.querySelector('#yt-toggle i').className='ph-fill ph-speaker-slash text-sm';}
-    });
-
-    const ytPM=document.getElementById('yt-playlist-modal'),ytPMC=document.getElementById('yt-playlist-modal-content');
-    const openYtPl=()=>{renderYtList();ytPM.classList.remove('opacity-0','pointer-events-none');ytPMC.classList.remove('scale-95');};
-    const closeYtPl=()=>{ytPM.classList.add('opacity-0','pointer-events-none');ytPMC.classList.add('scale-95');};
-    document.getElementById('open-yt-playlist').addEventListener('click',openYtPl);
-    document.getElementById('close-yt-playlist').addEventListener('click',closeYtPl);
-    ytPM.addEventListener('click',e=>{if(e.target===ytPM)closeYtPl();});
-    document.getElementById('yt-url-add').addEventListener('click',()=>{
-        const inp=document.getElementById('yt-url-input');
-        const m=inp.value.trim().match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-        if(!m){alert('Link không hợp lệ!');return;}
-        const id=m[1];
-        if(ytTracks.find(t=>t.id===id)){alert('Đã có rồi!');return;}
-        ytTracks.push({id,title:`Video: ${id}`,channel:'YouTube'});
-        inp.value=''; renderYtList(); loadYt(ytTracks.length-1,isRunning); closeYtPl();
-    });
-    function renderYtList(){
-        const c=document.getElementById('yt-playlist-container');c.innerHTML='';
-        ytTracks.forEach((t,i)=>{
-            const a=i===ytIdx,btn=document.createElement('button');
-            btn.className=`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${a?'bg-red-500/15 border border-red-400/25':'bg-white/5 border border-transparent hover:bg-white/10'}`;
-            btn.innerHTML=`<img src="https://img.youtube.com/vi/${t.id}/mqdefault.jpg" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white/10"><div class="flex-1 min-w-0"><p class="text-xs font-medium truncate ${a?'text-white':'text-white/70'}">${t.title}</p><p class="text-xs text-white/40 truncate mt-0.5">${t.channel}</p></div>${a?'<i class="ph-fill ph-waves text-red-300 animate-pulse flex-shrink-0"></i>':''}`;
-            btn.onclick=()=>{loadYt(i,true);closeYtPl();if(!isRunning)toggleTimer();};
-            c.appendChild(btn);
-        });
-    }
-
-    // ============================================================
-    // QUOTES
-    // ============================================================
-    const quotes=["Hít vào tâm tĩnh lặng, thở ra miệng mỉm cười.","Sự bình yên đến từ bên trong, đừng tìm nó ở bên ngoài.","Hãy để mọi thứ trôi qua như những đám mây trên bầu trời.","Mỗi khoảnh khắc là một cơ hội để bắt đầu lại.","Tập trung vào hiện tại là chiếc chìa khóa của hạnh phúc.","Không có con đường dẫn đến hạnh phúc, hạnh phúc chính là con đường.","Tĩnh lặng không phải là trống rỗng, nó chứa đầy những câu trả lời."];
-    const qd=document.getElementById('quote-display');
-    function changeQuote(){qd.style.opacity=0;setTimeout(()=>{qd.textContent=`"${quotes[Math.floor(Math.random()*quotes.length)]}"`;qd.style.opacity=1;},500);}
-    setInterval(changeQuote,15000);changeQuote();
-
-    // ============================================================
-    // TIMER
-    // ============================================================
-    let timerDuration=25*60,timeRemaining=25*60,timerInterval=null,isRunning=false;
-    const timeDisplay=document.getElementById('time-display'),statusDisplay=document.getElementById('status-display');
-    const playPauseBtn=document.getElementById('play-pause-btn'),playIcon=document.getElementById('play-icon');
-    const progressCircle=document.getElementById('progress-circle'),circumference=48*2*Math.PI;
-    progressCircle.style.strokeDasharray=`${circumference} ${circumference}`;progressCircle.style.strokeDashoffset=0;
-
-    function formatTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
-    function updateDisplay(){timeDisplay.textContent=formatTime(timeRemaining);progressCircle.style.strokeDashoffset=circumference-(timeRemaining/timerDuration)*circumference;}
-
-    function startAllAudio(){
-        getCtx(); // resume AudioContext
-        const saved=JSON.parse(localStorage.getItem('zf-amb')||'{}');
-        Object.entries(saved).forEach(([s,v])=>{if(v>0&&!ambientNodes[s]) ambientNodes[s]=creators[s](v/100);});
-        if(ytReady&&ytPlayer&&ytPlayer.getPlayerState()!==YT.PlayerState.PLAYING) ytPlayer.playVideo();
-    }
-    function pauseAllAudio(){
-        if(ytReady&&ytPlayer)ytPlayer.pauseVideo();
-        // ambient keeps running in background — stop nodes to save resources
-        Object.keys(ambientNodes).forEach(s=>{ ambientNodes[s].stop(); delete ambientNodes[s]; });
-    }
-
-    function toggleTimer(){
-        if(isRunning){
-            clearInterval(timerInterval);pauseAllAudio();
-            playIcon.className='ph-fill ph-play text-3xl ml-1';statusDisplay.textContent='Tạm dừng';
-        } else {
-            if(timeRemaining===0) timeRemaining=timerDuration;
-            startAllAudio();
-            timerInterval=setInterval(()=>{
-                timeRemaining--;updateDisplay();
-                if(timeRemaining<=0){
-                    clearInterval(timerInterval);isRunning=false;
-                    playIcon.className='ph-fill ph-play text-3xl ml-1';statusDisplay.textContent='Hoàn thành!';
-                    pauseAllAudio();
-                    const t=document.createElement('div');
-                    t.className='fixed top-4 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-6 py-3 rounded-full shadow-lg font-medium z-50 animate-bounce';
-                    t.innerText='🔔 Đã hết thời gian! Nghỉ ngơi chút nhé.';
-                    document.body.appendChild(t);setTimeout(()=>t.remove(),5000);
-                }
-            },1000);
-            playIcon.className='ph-fill ph-pause text-3xl';statusDisplay.textContent='Đang tập trung';
-        }
-        isRunning=!isRunning;
-    }
-    function resetTimer(){
-        clearInterval(timerInterval);isRunning=false;timeRemaining=timerDuration;
-        pauseAllAudio();playIcon.className='ph-fill ph-play text-3xl ml-1';statusDisplay.textContent='Sẵn sàng';updateDisplay();
-    }
-
-    document.getElementById('play-pause-btn').addEventListener('click',toggleTimer);
-    document.getElementById('reset-btn').addEventListener('click',resetTimer);
-    document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();toggleTimer();}if(e.key.toLowerCase()==='r')resetTimer();});
-
-    const timeModal=document.getElementById('time-modal'),tmC=document.getElementById('time-modal-content');
-    document.getElementById('mode-btn').addEventListener('click',()=>{timeModal.classList.remove('opacity-0','pointer-events-none');tmC.classList.remove('scale-95');});
-    document.getElementById('close-modal-btn').addEventListener('click',()=>{timeModal.classList.add('opacity-0','pointer-events-none');tmC.classList.add('scale-95');});
-    document.getElementById('time-slider').addEventListener('input',e=>{document.getElementById('slider-val-display').textContent=`${e.target.value} phút`;timerDuration=e.target.value*60;resetTimer();});
-    document.querySelectorAll('.time-preset').forEach(btn=>btn.addEventListener('click',e=>{
-        const m=parseInt(e.currentTarget.dataset.time);
-        document.getElementById('time-slider').value=m;document.getElementById('slider-val-display').textContent=`${m} phút`;
-        timerDuration=m*60;resetTimer();timeModal.classList.add('opacity-0','pointer-events-none');tmC.classList.add('scale-95');
-    }));
-    timeModal.addEventListener('click',e=>{if(e.target===timeModal){timeModal.classList.add('opacity-0','pointer-events-none');tmC.classList.add('scale-95');}});
-
-    updateDisplay();
-    updateYtUI(0,false);
-    </script>
+// btn-next-bg label update (now just shows name briefly)
+document.getElementById('btn-next-bg').addEventListener('click', () => {
+  applyBg((bgIdx + 1) % BG_LIST.length);
+  const btn = document.getElementById('btn-next-bg');
+  btn.style.transition = 'transform 0.35s ease';
+  btn.style.transform = 'rotate(360deg)';
+  setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 380);
+});
+</script>
 </body>
 </html>
