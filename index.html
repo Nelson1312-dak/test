@@ -125,7 +125,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
           <circle id="ring" class="ring-fill" stroke-width="2" cx="50" cy="50" r="47" fill="none" stroke-dasharray="295.3" stroke-dashoffset="0"/>
         </svg>
         <div class="z-10 text-center">
-          <div id="t-display" class="font-bold tracking-tighter" style="font-family:'Space Grotesk',sans-serif;font-size:clamp(2.25rem,10vw,3.75rem)">25:00</div>
+          <div id="t-display" class="font-bold tracking-tighter" style="font-family:'Space Grotesk',sans-serif;font-size:clamp(2.25rem,10vw,3.75rem)">90:00</div>
           <div id="t-status" class="text-xs uppercase tracking-widest text-white/50 mt-1.5 font-semibold">Sẵn sàng</div>
         </div>
       </div>
@@ -196,14 +196,16 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
   <div class="glass modal-box rounded-2xl p-6 sm:p-8 max-w-sm">
     <h3 class="text-xl mb-5 sm:mb-6 text-center" style="font-family:'Space Grotesk',sans-serif">Chọn thời gian</h3>
     <div class="mb-5 sm:mb-6">
-      <div class="flex justify-between text-white/55 text-sm mb-2"><span>1p</span><span id="time-val" class="font-semibold text-white">25 phút</span><span>180p</span></div>
-      <input type="range" id="time-sl" min="1" max="180" value="25">
+      <div class="flex justify-between text-white/55 text-sm mb-2"><span>30p</span><span id="time-val" class="font-semibold text-white">90 phút</span><span>180p</span></div>
+      <input type="range" id="time-sl" min="30" max="180" value="90">
     </div>
-    <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
-      <button class="gbtn py-2.5 sm:py-3 rounded-xl text-sm t-preset" data-t="10">10 Phút</button>
-      <button class="gbtn py-2.5 sm:py-3 rounded-xl text-sm t-preset" data-t="30">30 Phút</button>
-      <button class="gbtn py-2.5 sm:py-3 rounded-xl text-sm t-preset" data-t="60">1 Giờ</button>
-      <button class="gbtn py-2.5 sm:py-3 rounded-xl text-sm t-preset" data-t="180">3 Giờ</button>
+    <div class="grid grid-cols-3 gap-2">
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset" data-t="30">30 Phút</button>
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset" data-t="45">45 Phút</button>
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset" data-t="60">1 Giờ</button>
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset font-semibold text-white/90" data-t="90">90p ★</button>
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset" data-t="120">2 Giờ</button>
+      <button class="gbtn py-2.5 rounded-xl text-sm t-preset" data-t="180">3 Giờ</button>
     </div>
     <button id="time-close" class="mt-4 sm:mt-5 w-full py-2.5 sm:py-3 rounded-xl bg-white/8 hover:bg-white/15 transition-colors text-sm">Lưu & Đóng</button>
   </div>
@@ -501,120 +503,126 @@ function mkNoise(ctx, secs) {
 
 function mkRain(vol) {
   const ctx = getCtx();
-  const hiss = mkNoise(ctx, 3);
-  const lp1  = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=3000;
-  const lp2  = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=1800;
-  const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.18;
-  hiss.connect(lp1); lp1.connect(lp2); lp2.connect(gHiss); gHiss.connect(ctx.destination);
-  const dropSrc = mkNoise(ctx, 1);
-  const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=2400; bp1.Q.value=3;
-  const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1200; bp2.Q.value=2;
-  const gDrop = ctx.createGain(); gDrop.gain.value = 0;
-  dropSrc.connect(bp1); bp1.connect(gDrop); gDrop.connect(ctx.destination);
-  dropSrc.connect(bp2); bp2.connect(gDrop);
-  const heavySrc = mkNoise(ctx, 1);
-  const bpH = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=600; bpH.Q.value=1.5;
-  const gHeavy = ctx.createGain(); gHeavy.gain.value = 0;
-  heavySrc.connect(bpH); bpH.connect(gHeavy); gHeavy.connect(ctx.destination);
-  hiss.start(); dropSrc.start(); heavySrc.start();
-  let dropTimer, heavyTimer;
-  function scheduleDrops() {
-    const now = ctx.currentTime;
-    for (let i = 0; i < 12; i++) {
-      const t   = now + Math.random() * 1.2;
-      const amp = (0.15 + Math.random() * 0.45) * vol;
-      const dur = 0.015 + Math.random() * 0.025;
-      gDrop.gain.setValueAtTime(amp, t);
-      gDrop.gain.setValueAtTime(0,   t + dur);
-    }
-    dropTimer = setTimeout(scheduleDrops, 900 + Math.random() * 400);
-  }
-  function scheduleHeavy() {
-    const now = ctx.currentTime;
-    for (let i = 0; i < 4; i++) {
-      const t   = now + Math.random() * 1.8;
-      const amp = (0.2 + Math.random() * 0.35) * vol;
-      const dur = 0.04 + Math.random() * 0.05;
-      gHeavy.gain.setValueAtTime(amp, t);
-      gHeavy.gain.setValueAtTime(0,   t + dur);
-    }
-    heavyTimer = setTimeout(scheduleHeavy, 1500 + Math.random() * 800);
-  }
-  scheduleDrops(); scheduleHeavy();
+  const master = ctx.createGain();
+  master.gain.value = vol * 0.55;
+  master.connect(ctx.destination);
+  const srcs = [], oscs = [];
+
+  // Pink noise base: stacked lowpass layers with 1/f rolloff
+  [[5500, 0.30], [2200, 0.22], [900, 0.16], [340, 0.10]].forEach(([freq, amp]) => {
+    const s = mkNoise(ctx, 8);
+    const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=freq;
+    const g = ctx.createGain(); g.gain.value=amp;
+    s.connect(lp); lp.connect(g); g.connect(master);
+    s.start(); srcs.push(s);
+  });
+
+  // Drop texture: bandpass noise AM-modulated by beating LFOs (irregular patter)
+  [[1500, 8.3, 0.13], [2300, 12.7, 0.09], [850, 5.9, 0.11]].forEach(([freq, rate, depth]) => {
+    const s = mkNoise(ctx, 5);
+    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq; bp.Q.value=2.5;
+    const am = ctx.createGain(); am.gain.value=0.01;
+    const lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=rate;
+    const lg = ctx.createGain(); lg.gain.value=depth;
+    lfo.connect(lg); lg.connect(am.gain);
+    s.connect(bp); bp.connect(am); am.connect(master);
+    s.start(); lfo.start(); srcs.push(s); oscs.push(lfo);
+  });
+
+  // Slow breathing LFO (rain intensity swell)
+  const breath = ctx.createOscillator(); breath.type='sine'; breath.frequency.value=0.07;
+  const breathG = ctx.createGain(); breathG.gain.value=0.09;
+  breath.connect(breathG); breathG.connect(master.gain);
+  breath.start(); oscs.push(breath);
+
   return {
-    g: gHiss,
-    setVol(v) { gHiss.gain.setTargetAtTime(v * 0.18, ctx.currentTime, 0.1); },
+    g: master,
+    setVol(v) { master.gain.setTargetAtTime(v * 0.55, ctx.currentTime, 0.2); },
     stop() {
-      clearTimeout(dropTimer); clearTimeout(heavyTimer);
-      try { hiss.stop(); dropSrc.stop(); heavySrc.stop(); } catch(e) {}
+      srcs.forEach(s => { try { s.stop(); } catch(e) {} });
+      oscs.forEach(o => { try { o.stop(); } catch(e) {} });
     }
   };
 }
 
 function mkFire(vol) {
   const ctx = getCtx();
-  const rumble = mkNoise(ctx, 4);
-  const lpR1 = ctx.createBiquadFilter(); lpR1.type='lowpass'; lpR1.frequency.value=380;
-  const lpR2 = ctx.createBiquadFilter(); lpR2.type='lowpass'; lpR2.frequency.value=180;
-  const gRumble = ctx.createGain(); gRumble.gain.value = vol * 0.42;
-  rumble.connect(lpR1); lpR1.connect(lpR2); lpR2.connect(gRumble); gRumble.connect(ctx.destination);
-  const hiss = mkNoise(ctx, 2);
-  const bpH  = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=900; bpH.Q.value=0.6;
-  const lpH  = ctx.createBiquadFilter(); lpH.type='lowpass'; lpH.frequency.value=2500;
-  const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.22;
-  hiss.connect(bpH); bpH.connect(lpH); lpH.connect(gHiss); gHiss.connect(ctx.destination);
-  const popSrc = mkNoise(ctx, 1);
-  const bpPop  = ctx.createBiquadFilter(); bpPop.type='bandpass'; bpPop.frequency.value=1800; bpPop.Q.value=4;
-  const gPop   = ctx.createGain(); gPop.gain.value = 0;
-  popSrc.connect(bpPop); bpPop.connect(gPop); gPop.connect(ctx.destination);
-  const crackSrc = mkNoise(ctx, 1);
-  const bpCrack  = ctx.createBiquadFilter(); bpCrack.type='bandpass'; bpCrack.frequency.value=500; bpCrack.Q.value=3;
-  const gCrack   = ctx.createGain(); gCrack.gain.value = 0;
-  crackSrc.connect(bpCrack); bpCrack.connect(gCrack); gCrack.connect(ctx.destination);
-  rumble.start(); hiss.start(); popSrc.start(); crackSrc.start();
-  let popTimer, crackTimer;
-  function schedulePops() {
-    const now = ctx.currentTime;
-    const n = 3 + Math.floor(Math.random() * 5);
-    for (let i = 0; i < n; i++) {
-      const t   = now + Math.random() * 1.0;
-      const amp = (0.15 + Math.random() * 0.55) * vol;
-      const dur = 0.008 + Math.random() * 0.018;
-      gPop.gain.setValueAtTime(amp, t);
-      gPop.gain.setValueAtTime(0,   t + dur);
-    }
-    popTimer = setTimeout(schedulePops, 600 + Math.random() * 700);
-  }
-  function scheduleCracks() {
-    const now = ctx.currentTime;
-    const n = 1 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < n; i++) {
-      const t   = now + Math.random() * 2.0;
-      const amp = (0.25 + Math.random() * 0.5) * vol;
-      const dur = 0.025 + Math.random() * 0.045;
-      gCrack.gain.setValueAtTime(amp, t);
-      gCrack.gain.setValueAtTime(0,   t + dur);
-      if (Math.random() > 0.5) {
-        const t2 = t + dur + 0.02 + Math.random() * 0.04;
-        gCrack.gain.setValueAtTime(amp * 0.4, t2);
-        gCrack.gain.setValueAtTime(0, t2 + 0.015);
-      }
-    }
-    crackTimer = setTimeout(scheduleCracks, 1200 + Math.random() * 1400);
-  }
-  schedulePops(); scheduleCracks();
+  const master = ctx.createGain();
+  master.gain.value = vol * 0.6;
+  master.connect(ctx.destination);
+  const srcs = [], oscs = [];
+
+  // Deep bass rumble (core fire body)
+  const r1 = mkNoise(ctx, 8);
+  const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=320;
+  const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=140;
+  const gr = ctx.createGain(); gr.gain.value=0.48;
+  r1.connect(lp1); lp1.connect(lp2); lp2.connect(gr); gr.connect(master);
+  r1.start(); srcs.push(r1);
+
+  // Mid crackle hiss (continuous texture)
+  const r2 = mkNoise(ctx, 6);
+  const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=650; bp1.Q.value=0.7;
+  const gh = ctx.createGain(); gh.gain.value=0.26;
+  r2.connect(bp1); bp1.connect(gh); gh.connect(master);
+  r2.start(); srcs.push(r2);
+
+  // High sparkle — sawtooth AM gives sharp periodic pops (like wood snaps)
+  const r3 = mkNoise(ctx, 4);
+  const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1700; bp2.Q.value=3;
+  const gc = ctx.createGain(); gc.gain.value=0.01;
+  const popLFO = ctx.createOscillator(); popLFO.type='sawtooth'; popLFO.frequency.value=1.3;
+  const popG = ctx.createGain(); popG.gain.value=0.18;
+  popLFO.connect(popG); popG.connect(gc.gain);
+  r3.connect(bp2); bp2.connect(gc); gc.connect(master);
+  r3.start(); popLFO.start(); srcs.push(r3); oscs.push(popLFO);
+
+  // Deep wood pops — different sawtooth rate creates beat irregularity
+  const r4 = mkNoise(ctx, 4);
+  const bp3 = ctx.createBiquadFilter(); bp3.type='bandpass'; bp3.frequency.value=480; bp3.Q.value=4;
+  const gw = ctx.createGain(); gw.gain.value=0.01;
+  const woodLFO = ctx.createOscillator(); woodLFO.type='sawtooth'; woodLFO.frequency.value=0.7;
+  const woodG = ctx.createGain(); woodG.gain.value=0.22;
+  woodLFO.connect(woodG); woodG.connect(gw.gain);
+  r4.connect(bp3); bp3.connect(gw); gw.connect(master);
+  r4.start(); woodLFO.start(); srcs.push(r4); oscs.push(woodLFO);
+
+  // Slow fire-breathing swell
+  const breathLFO = ctx.createOscillator(); breathLFO.type='sine'; breathLFO.frequency.value=0.13;
+  const breathG = ctx.createGain(); breathG.gain.value=0.11;
+  breathLFO.connect(breathG); breathG.connect(master.gain);
+  breathLFO.start(); oscs.push(breathLFO);
+
   return {
-    g: gRumble,
-    setVol(v) {
-      const now = ctx.currentTime;
-      gRumble.gain.setTargetAtTime(v * 0.42, now, 0.1);
-      gHiss.gain.setTargetAtTime(v * 0.22, now, 0.1);
-    },
+    g: master,
+    setVol(v) { master.gain.setTargetAtTime(v * 0.6, ctx.currentTime, 0.15); },
     stop() {
-      clearTimeout(popTimer); clearTimeout(crackTimer);
-      try { rumble.stop(); hiss.stop(); popSrc.stop(); crackSrc.stop(); } catch(e) {}
+      srcs.forEach(s => { try { s.stop(); } catch(e) {} });
+      oscs.forEach(o => { try { o.stop(); } catch(e) {} });
     }
   };
+}
+
+// Tibetan singing bowl — 3 strikes with inharmonic decay
+function playEndAlert() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    [[0, 0.45], [1.9, 0.32], [3.4, 0.20]].forEach(([delay, amp]) => {
+      [[330, 1], [654, 0.55], [1047, 0.28], [1540, 0.13], [2090, 0.06]].forEach(([freq, rel]) => {
+        const osc = ctx.createOscillator();
+        const env = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const t = now + delay;
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(amp * rel, t + 0.008);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + 3.8 - delay * 0.25);
+        osc.connect(env); env.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 4.5);
+      });
+    });
+  } catch(e) {}
 }
 
 function mkWaves(vol) {
@@ -799,7 +807,7 @@ setInterval(rotateQuote,18000); rotateQuote();
 // ================================================================
 // TIMER
 // ================================================================
-let dur=25*60, rem=25*60, tInt=null, isRunning=false;
+let dur=90*60, rem=90*60, tInt=null, isRunning=false;
 const CIRC=47*2*Math.PI;
 const ringEl=document.getElementById('ring');
 ringEl.style.strokeDasharray=`${CIRC} ${CIRC}`;
@@ -833,6 +841,7 @@ function toggleTimer() {
         document.getElementById('play-icon').className='ph-fill ph-play text-2xl sm:text-3xl ml-1';
         document.getElementById('t-status').textContent='Hoàn thành!';
         audioPause();
+        playEndAlert();
         const toast=document.createElement('div');
         toast.className='fixed top-4 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-5 py-2.5 rounded-full shadow-xl font-medium z-50 animate-bounce text-sm whitespace-nowrap';
         toast.textContent='🔔 Đã hết thời gian! Nghỉ ngơi nhé.';
