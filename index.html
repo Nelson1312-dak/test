@@ -43,6 +43,7 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 
 /* ---- YT ---- */
 #yt-player{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none}
+#yt-player iframe{pointer-events:none!important;}
 .yt-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(220,38,38,0.2);border:1px solid rgba(248,113,113,0.3);border-radius:20px;padding:2px 8px;font-size:11px;color:#fca5a5}
 #yt-prog-wrap{height:4px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;overflow:hidden}
 #yt-prog-fill{height:100%;background:white;width:0%;border-radius:2px;transition:width 0.6s linear}
@@ -121,7 +122,7 @@ body.in-electron header{-webkit-app-region:no-drag}
     <!-- Buttons pinned to right -->
     <div class="flex items-center gap-1.5 flex-shrink-0">
       <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1 hidden lg:block"></span>
-      <button id="btn-next-bg" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Chuyển bg">
+      <button id="btn-next-bg" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Nền tiếp theo">
         <i class="ph ph-arrow-clockwise text-sm sm:text-base"></i>
       </button>
       <button id="btn-bg-list" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Hình nền">
@@ -463,11 +464,24 @@ function spawnZenOrb() {
   });
 }
 
+function showBgToast(label) {
+  const old = document.getElementById('bg-toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'bg-toast';
+  t.style.cssText = 'position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);padding:6px 16px;border-radius:999px;font-size:12px;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.13);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);z-index:60;white-space:nowrap;transition:opacity 0.3s;pointer-events:none';
+  t.textContent = label;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 350); }, 2000);
+}
+
 function applyBg(idx) {
   clearEffects();
   bgIdx = idx;
   const bg = BG_LIST[idx];
   localStorage.setItem('zf-bg', bg.id);
+
+  showBgToast(bg.label);
 
   const lbl = document.getElementById('bg-label');
   lbl.textContent = bg.label;
@@ -631,7 +645,17 @@ function onYouTubeIframeAPIReady() {
     height:'1', width:'1', videoId: YT_TRACKS[0].id,
     playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1},
     events:{
-      onReady: e => { ytReady=true; e.target.setVolume(ytVol); ytUpdateUI(0,false); },
+      onReady: e => {
+        ytReady=true; e.target.setVolume(ytVol); ytUpdateUI(0,false);
+        // Prevent fullscreen takeover on iOS/mobile
+        const iframe = e.target.getIframe();
+        if (iframe) {
+          iframe.setAttribute('playsinline', '');
+          iframe.setAttribute('webkit-playsinline', '');
+          iframe.removeAttribute('allowfullscreen');
+          iframe.setAttribute('allow', 'autoplay; encrypted-media');
+        }
+      },
       onStateChange: e => {
         if(e.data===YT.PlayerState.PLAYING){ document.getElementById('yt-icon').className='ph-fill ph-pause text-sm'; ytProgStart(); }
         else if(e.data===YT.PlayerState.PAUSED){ document.getElementById('yt-icon').className='ph-fill ph-play text-sm'; ytProgStop(); }
@@ -899,25 +923,6 @@ function renderAddPlList() {
   });
 }
 
-// Widget mode — toggle trên tab hiện tại, không mở cửa sổ mới
-if (!window.zenAPI) {
-  document.getElementById('btn-popup').style.display = 'flex';
-}
-
-document.getElementById('btn-popup').addEventListener('click', () => {
-  const isWidget = document.body.classList.toggle('popup-mode');
-  document.getElementById('popup-bar').style.display = isWidget ? 'flex' : 'none';
-  const icon = document.querySelector('#btn-popup i');
-  icon.className = isWidget
-    ? 'ph ph-arrows-out text-sm sm:text-base'
-    : 'ph ph-app-window text-sm sm:text-base';
-});
-
-document.getElementById('popup-expand').addEventListener('click', () => {
-  document.body.classList.remove('popup-mode');
-  document.getElementById('popup-bar').style.display = 'none';
-  document.querySelector('#btn-popup i').className = 'ph ph-app-window text-sm sm:text-base';
-});
 
 // Electron widget mode
 if (window.zenAPI) {
@@ -931,9 +936,12 @@ if (window.zenAPI) {
 document.getElementById('btn-next-bg').addEventListener('click', () => {
   applyBg((bgIdx + 1) % BG_LIST.length);
   const btn = document.getElementById('btn-next-bg');
-  btn.style.transition = 'transform 0.35s ease';
-  btn.style.transform = 'rotate(360deg)';
-  setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 380);
+  btn.style.transition = 'none';
+  btn.style.transform = 'rotate(0deg)';
+  requestAnimationFrame(() => {
+    btn.style.transition = 'transform 0.4s ease';
+    btn.style.transform = 'rotate(360deg)';
+  });
 });
 </script>
 </body>
