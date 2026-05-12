@@ -78,13 +78,14 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <main class="relative z-10 w-full max-w-6xl mx-auto px-4 py-6 h-screen flex flex-col">
 
   <!-- HEADER -->
-  <header class="flex items-center justify-between py-4">
-    <div class="flex-1"></div>
-    <div class="flex-1 text-center">
+  <header class="relative flex items-center justify-center py-4" style="min-height:64px">
+    <!-- Perfectly centered title + quote -->
+    <div class="text-center pointer-events-none select-none">
       <h2 class="text-xl font-bold tracking-widest text-white/75 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
-      <p id="quote" class="mt-1.5 text-xs text-white/55 italic h-5 transition-opacity duration-500"></p>
+      <p id="quote" class="mt-1.5 text-xs text-white/55 italic transition-opacity duration-500 leading-relaxed" style="max-width:520px;min-height:2rem"></p>
     </div>
-    <div class="flex items-center justify-end gap-2">
+    <!-- Buttons pinned to right -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
       <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1 hidden md:block"></span>
       <button id="btn-next-bg" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Chuyển bg tiếp theo">
         <i class="ph ph-arrow-clockwise text-base"></i>
@@ -92,7 +93,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <button id="btn-bg-list" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Danh sách hình nền">
         <i class="ph ph-images text-base"></i>
       </button>
-      <button id="btn-add-playlist" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Thêm YouTube playlist">
+      <button id="btn-add-playlist" class="gbtn w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Thêm vào playlist">
         <i class="ph ph-playlist text-base"></i>
       </button>
     </div>
@@ -697,10 +698,38 @@ function ytRenderList() {
 // ================================================================
 // QUOTES
 // ================================================================
-const QUOTES=['Hít vào tâm tĩnh lặng, thở ra miệng mỉm cười.','Sự bình yên đến từ bên trong, đừng tìm nó ở bên ngoài.','Hãy để mọi thứ trôi qua như những đám mây trên bầu trời.','Mỗi khoảnh khắc là một cơ hội để bắt đầu lại.','Tập trung vào hiện tại là chiếc chìa khóa của hạnh phúc.','Không có con đường dẫn đến hạnh phúc, hạnh phúc chính là con đường.','Tĩnh lặng không phải là trống rỗng, nó chứa đầy những câu trả lời.'];
+const QUOTES=[
+  {t:'Hít vào, tôi làm lắng dịu thân tâm. Thở ra, tôi mỉm cười.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Không có con đường đến hạnh phúc — hạnh phúc chính là con đường.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Phép lạ không phải là đi trên mặt nước. Phép lạ là đi trên mặt đất xanh này trong hiện tại.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Nụ cười của bạn giống như một bông hoa, nở ra khi bạn thở vào.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Nếu bạn yêu ai, món quà lớn nhất bạn có thể trao cho họ là sự hiện diện của bạn.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Hãy nhìn sâu vào thiên nhiên và bạn sẽ hiểu mọi thứ tốt hơn.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Khoảnh khắc hiện tại chứa đựng quá khứ và tương lai.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Đừng để tâm trí bị ràng buộc bởi quá khứ hay tương lai. Hãy sống trong khoảnh khắc này.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Chúng ta cần phải học cách dừng lại. Dừng lại là điều kiện đầu tiên để chữa lành.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Thở là cây cầu kết nối sự sống với ý thức.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Khi bạn trồng hạt giống từ bi trong trái tim, bạn sẽ thu hoạch hòa bình.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Đất trời đang nói chuyện. Chỉ cần bạn lắng nghe.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Hiểu biết là nền tảng của tình yêu thương. Không có hiểu biết, không có tình yêu.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Bạn đã đến đây rồi. Bạn đang ở đây. Điều đó là đủ.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Đôi khi niềm vui là nguồn gốc của nụ cười. Nhưng đôi khi nụ cười là nguồn gốc của niềm vui.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Sóng muốn trở thành nước. Nước không cần trở thành gì cả.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Mỗi bước chân là một bài kinh, mỗi hơi thở là một cầu nguyện.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Hãy đối xử với cơ thể bạn như một ngôi đền, không phải một nhà tù.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Tương lai chưa đến. Quá khứ đã qua. Chỉ có khoảnh khắc này là thật.',a:'Thiền sư Thích Nhất Hạnh'},
+  {t:'Lắng nghe sâu là nền tảng của ngôn ngữ yêu thương.',a:'Thiền sư Thích Nhất Hạnh'},
+];
 const qEl=document.getElementById('quote');
-function rotateQuote(){ qEl.style.opacity=0; setTimeout(()=>{ qEl.textContent=`"${QUOTES[Math.floor(Math.random()*QUOTES.length)]}"`; qEl.style.opacity=1; },500); }
-setInterval(rotateQuote,15000); rotateQuote();
+function rotateQuote(){
+  qEl.style.opacity=0;
+  setTimeout(()=>{
+    const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+    qEl.innerHTML=`"${q.t}" <span style="opacity:0.5;font-style:normal;font-size:0.7em;letter-spacing:0.05em">— ${q.a}</span>`;
+    qEl.style.opacity=1;
+  },500);
+}
+setInterval(rotateQuote,18000); rotateQuote();
 
 // ================================================================
 // TIMER
