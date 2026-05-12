@@ -29,12 +29,17 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif}
 .ring-fill{stroke:white;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 0.15s linear}
 
 /* ---- RANGE ---- */
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer;padding:0;margin:0}
 input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-container{height:20px}
 input[type=range]::-webkit-slider-runnable-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;margin-top:-5px;box-shadow:0 0 8px rgba(255,255,255,0.6)}
-input[type=range]::-moz-range-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px}
-input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 8px rgba(255,255,255,0.6)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;margin-top:-5px;box-shadow:0 0 8px rgba(255,255,255,0.6);cursor:pointer}
+input[type=range]::-moz-range-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px;border:none}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 8px rgba(255,255,255,0.6);cursor:pointer}
+input[type=range]::-ms-track{height:4px;background:rgba(255,255,255,0.2);border-radius:2px;border-color:transparent;color:transparent}
+input[type=range]::-ms-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 8px rgba(255,255,255,0.6);cursor:pointer;margin-top:0}
+input[type=range]::-ms-fill-lower{background:rgba(255,255,255,0.35);border-radius:2px}
+input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius:2px}
 
 /* ---- YT ---- */
 #yt-player{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none}
@@ -201,7 +206,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <button id="pl-close" class="gbtn rounded-full p-1.5 text-white/50 hover:text-white"><i class="ph ph-x"></i></button>
     </div>
     <div class="flex gap-2 mb-3">
-      <input id="yt-url-in" type="text" placeholder="youtube.com/watch?v=..." class="flex-1 bg-white/6 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+      <input id="yt-url-in" type="text" placeholder="youtube.com/watch?v=..." class="flex-1 bg-white/90 border border-white/20 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white">
       <button id="yt-url-add" class="px-3 py-2 bg-red-600/20 border border-red-400/25 text-red-300 rounded-xl text-xs hover:bg-red-600/30 transition-colors whitespace-nowrap">+ Thêm</button>
     </div>
     <div id="pl-list" class="flex flex-col gap-1.5 max-h-72 overflow-y-auto pr-0.5 scr"></div>
@@ -239,12 +244,12 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <div>
         <label class="text-xs text-white/45 mb-1.5 block">Link YouTube (video hoặc playlist)</label>
         <input id="add-url-in" type="text" placeholder="youtube.com/watch?v=... hoặc ?list=..."
-          class="w-full bg-white/6 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+          class="w-full bg-white/90 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-white focus:bg-white">
       </div>
       <div>
         <label class="text-xs text-white/45 mb-1.5 block">Tên hiển thị (tuỳ chọn)</label>
         <input id="add-title-in" type="text" placeholder="Ví dụ: Lofi Study Mix..."
-          class="w-full bg-white/6 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/25">
+          class="w-full bg-white/90 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-white focus:bg-white">
       </div>
       <button id="add-pl-submit" class="w-full py-2.5 bg-red-600/20 border border-red-400/25 text-red-300 rounded-xl text-sm hover:bg-red-600/30 transition-colors font-medium mt-1">
         <i class="ph-fill ph-plus-circle mr-1.5"></i>Thêm vào danh sách
@@ -499,51 +504,159 @@ function mkNoise(ctx, secs) {
   const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true; return src;
 }
 
-// Rain: filtered white noise
+// Rain: layered drops simulation
+// - Base layer: soft pink noise (not harsh white) for rain hiss
+// - Drop layer: random amplitude-modulated bursts mimicking lộp độp drops
 function mkRain(vol) {
-  const ctx=getCtx(), src=mkNoise(ctx,2);
-  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
-  const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=8000;
-  const g=ctx.createGain(); g.gain.value=vol*0.55;
-  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(ctx.destination); src.start();
-  return { g, stop(){try{src.stop()}catch(e){}} };
+  const ctx = getCtx();
+
+  // Layer 1: soft background rain hiss (pink-ish = lowpass filtered white)
+  const hiss = mkNoise(ctx, 3);
+  const lp1  = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=3000;
+  const lp2  = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=1800;
+  const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.18;
+  hiss.connect(lp1); lp1.connect(lp2); lp2.connect(gHiss); gHiss.connect(ctx.destination);
+
+  // Layer 2: individual drop ticks (bandpass bursts, random timing)
+  const dropSrc = mkNoise(ctx, 1);
+  const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=2400; bp1.Q.value=3;
+  const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1200; bp2.Q.value=2;
+  const gDrop = ctx.createGain(); gDrop.gain.value = 0;
+  dropSrc.connect(bp1); bp1.connect(gDrop); gDrop.connect(ctx.destination);
+  dropSrc.connect(bp2); bp2.connect(gDrop);
+
+  // Layer 3: heavier drops (lower freq pops)
+  const heavySrc = mkNoise(ctx, 1);
+  const bpH = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=600; bpH.Q.value=1.5;
+  const gHeavy = ctx.createGain(); gHeavy.gain.value = 0;
+  heavySrc.connect(bpH); bpH.connect(gHeavy); gHeavy.connect(ctx.destination);
+
+  hiss.start(); dropSrc.start(); heavySrc.start();
+
+  // Schedule dripping drops
+  let dropTimer, heavyTimer;
+  function scheduleDrops() {
+    const now = ctx.currentTime;
+    // Light drops: frequent ticking
+    for (let i = 0; i < 12; i++) {
+      const t   = now + Math.random() * 1.2;
+      const amp = (0.15 + Math.random() * 0.45) * vol;
+      const dur = 0.015 + Math.random() * 0.025;
+      gDrop.gain.setValueAtTime(amp, t);
+      gDrop.gain.setValueAtTime(0,   t + dur);
+    }
+    dropTimer = setTimeout(scheduleDrops, 900 + Math.random() * 400);
+  }
+  function scheduleHeavy() {
+    const now = ctx.currentTime;
+    // Heavier drops: less frequent, deeper sound
+    for (let i = 0; i < 4; i++) {
+      const t   = now + Math.random() * 1.8;
+      const amp = (0.2 + Math.random() * 0.35) * vol;
+      const dur = 0.04 + Math.random() * 0.05;
+      gHeavy.gain.setValueAtTime(amp, t);
+      gHeavy.gain.setValueAtTime(0,   t + dur);
+    }
+    heavyTimer = setTimeout(scheduleHeavy, 1500 + Math.random() * 800);
+  }
+  scheduleDrops(); scheduleHeavy();
+
+  return {
+    g: gHiss,
+    setVol(v) {
+      gHiss.gain.setTargetAtTime(v * 0.18, ctx.currentTime, 0.1);
+    },
+    stop() {
+      clearTimeout(dropTimer); clearTimeout(heavyTimer);
+      try { hiss.stop(); dropSrc.stop(); heavySrc.stop(); } catch(e) {}
+    }
+  };
 }
 
-// Fire: two layers + timed crackle scheduling (no LFO->gain)
+// Fire: realistic campfire with wood pops
+// - Deep rumble base (burning wood low freq)
+// - Mid crackle (continuous fire hiss)
+// - Sharp pops (wood snapping/exploding)
 function mkFire(vol) {
   const ctx = getCtx();
-  // Layer 1: deep low rumble
-  const src1 = mkNoise(ctx, 3);
-  const lp1 = ctx.createBiquadFilter(); lp1.type='lowpass'; lp1.frequency.value=450;
-  const lp2 = ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=220;
-  const g1  = ctx.createGain(); g1.gain.value = vol * 0.38;
-  src1.connect(lp1); lp1.connect(lp2); lp2.connect(g1); g1.connect(ctx.destination);
-  // Layer 2: crackle bursts (bandpass noise, gated)
-  const src2 = mkNoise(ctx, 1);
-  const bp   = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1100; bp.Q.value=0.9;
-  const g2   = ctx.createGain(); g2.gain.value=0;
-  src2.connect(bp); bp.connect(g2); g2.connect(ctx.destination);
-  src1.start(); src2.start();
-  // Schedule crackles with setValueAtTime — NO LFO modulation
-  let crackTimer;
-  function scheduleBurst() {
+
+  // Layer 1: deep rumble — the core burning sound
+  const rumble = mkNoise(ctx, 4);
+  const lpR1 = ctx.createBiquadFilter(); lpR1.type='lowpass'; lpR1.frequency.value=380;
+  const lpR2 = ctx.createBiquadFilter(); lpR2.type='lowpass'; lpR2.frequency.value=180;
+  const gRumble = ctx.createGain(); gRumble.gain.value = vol * 0.42;
+  rumble.connect(lpR1); lpR1.connect(lpR2); lpR2.connect(gRumble); gRumble.connect(ctx.destination);
+
+  // Layer 2: mid crackle hiss — the constant fire texture
+  const hiss = mkNoise(ctx, 2);
+  const bpH  = ctx.createBiquadFilter(); bpH.type='bandpass'; bpH.frequency.value=900; bpH.Q.value=0.6;
+  const lpH  = ctx.createBiquadFilter(); lpH.type='lowpass'; lpH.frequency.value=2500;
+  const gHiss= ctx.createGain(); gHiss.gain.value = vol * 0.22;
+  hiss.connect(bpH); bpH.connect(lpH); lpH.connect(gHiss); gHiss.connect(ctx.destination);
+
+  // Layer 3: wood pops (sharp transient bursts — the lộp độp sound)
+  const popSrc = mkNoise(ctx, 1);
+  const bpPop  = ctx.createBiquadFilter(); bpPop.type='bandpass'; bpPop.frequency.value=1800; bpPop.Q.value=4;
+  const gPop   = ctx.createGain(); gPop.gain.value = 0;
+  popSrc.connect(bpPop); bpPop.connect(gPop); gPop.connect(ctx.destination);
+
+  // Layer 4: deep wood cracks (lower frequency pops — chunky)
+  const crackSrc = mkNoise(ctx, 1);
+  const bpCrack  = ctx.createBiquadFilter(); bpCrack.type='bandpass'; bpCrack.frequency.value=500; bpCrack.Q.value=3;
+  const gCrack   = ctx.createGain(); gCrack.gain.value = 0;
+  crackSrc.connect(bpCrack); bpCrack.connect(gCrack); gCrack.connect(ctx.destination);
+
+  rumble.start(); hiss.start(); popSrc.start(); crackSrc.start();
+
+  let popTimer, crackTimer;
+
+  // High pops: frequent light snaps
+  function schedulePops() {
     const now = ctx.currentTime;
-    const count = 5 + Math.floor(Math.random()*5);
-    for (let i=0;i<count;i++){
-      const t = now + Math.random()*1.4;
-      const amp = Math.random() * vol * 0.28;
-      const dur = 0.03 + Math.random()*0.07;
-      g2.gain.setValueAtTime(amp, t);
-      g2.gain.setValueAtTime(0, t + dur);
+    const n = 3 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < n; i++) {
+      const t   = now + Math.random() * 1.0;
+      const amp = (0.15 + Math.random() * 0.55) * vol;
+      const dur = 0.008 + Math.random() * 0.018; // very short = sharp pop
+      gPop.gain.setValueAtTime(amp, t);
+      gPop.gain.setValueAtTime(0,   t + dur);
     }
-    crackTimer = setTimeout(scheduleBurst, 1000 + Math.random()*600);
+    popTimer = setTimeout(schedulePops, 600 + Math.random() * 700);
   }
-  scheduleBurst();
+
+  // Deep cracks: less frequent, chunkier
+  function scheduleCracks() {
+    const now = ctx.currentTime;
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      const t   = now + Math.random() * 2.0;
+      const amp = (0.25 + Math.random() * 0.5) * vol;
+      const dur = 0.025 + Math.random() * 0.045; // slightly longer = wood chunk
+      gCrack.gain.setValueAtTime(amp, t);
+      gCrack.gain.setValueAtTime(0,   t + dur);
+      // sometimes add a follow-up micro-pop (like wood settling)
+      if (Math.random() > 0.5) {
+        const t2 = t + dur + 0.02 + Math.random() * 0.04;
+        gCrack.gain.setValueAtTime(amp * 0.4, t2);
+        gCrack.gain.setValueAtTime(0, t2 + 0.015);
+      }
+    }
+    crackTimer = setTimeout(scheduleCracks, 1200 + Math.random() * 1400);
+  }
+
+  schedulePops(); scheduleCracks();
+
   return {
-    g: g1,
-    _g2: g2, _vol: vol,
-    setVol(v){ g1.gain.setTargetAtTime(v*0.38, ctx.currentTime, 0.1); this._vol=v; },
-    stop(){ clearTimeout(crackTimer); try{src1.stop();src2.stop()}catch(e){} }
+    g: gRumble,
+    setVol(v) {
+      const now = ctx.currentTime;
+      gRumble.gain.setTargetAtTime(v * 0.42, now, 0.1);
+      gHiss.gain.setTargetAtTime(v * 0.22, now, 0.1);
+    },
+    stop() {
+      clearTimeout(popTimer); clearTimeout(crackTimer);
+      try { rumble.stop(); hiss.stop(); popSrc.stop(); crackSrc.stop(); } catch(e) {}
+    }
   };
 }
 
@@ -572,8 +685,9 @@ const AMB_MK = {rain:mkRain, fire:mkFire, waves:mkWaves};
 
 function ambSetVol(s, vol) {
   const n=ambNodes[s]; if(!n) return;
-  if (s==='fire' && n.setVol) { n.setVol(vol); return; }
-  const mult={rain:0.55,waves:0.62}[s]||0.5;
+  // fire and rain both have custom setVol for multi-layer control
+  if (n.setVol) { n.setVol(vol); return; }
+  const mult={waves:0.62}[s]||0.5;
   n.g.gain.setTargetAtTime(vol*mult, getCtx().currentTime, 0.1);
 }
 function ambStart(s, vol) { if(!ambNodes[s]) ambNodes[s]=AMB_MK[s](vol); }
