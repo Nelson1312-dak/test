@@ -76,7 +76,6 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 /* ---- MAIN SCROLL (mobile) ---- */
 #main-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 
-
 /* ---- ELECTRON WIN-BAR ---- */
 #win-bar{display:none;-webkit-app-region:drag;height:32px;flex-shrink:0;align-items:center;justify-content:flex-end;padding:0 10px;gap:4px;background:rgba(0,0,0,0.25);border-bottom:1px solid rgba(255,255,255,0.06)}
 #win-bar button{-webkit-app-region:no-drag;width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:opacity 0.2s;opacity:0.55}
@@ -84,7 +83,6 @@ input[type=range]::-ms-fill-upper{background:rgba(255,255,255,0.2);border-radius
 #win-btn-hide{background:rgba(255,255,255,0.12);color:#fff}
 #win-btn-min{background:rgba(255,200,50,0.25);color:#ffd54f}
 #win-btn-close{background:rgba(220,50,50,0.3);color:#ff8a80}
-/* Khi trong Electron, header không cần drag riêng vì đã có win-bar */
 body.in-electron header{-webkit-app-region:no-drag}
 </style>
 </head>
@@ -95,11 +93,8 @@ body.in-electron header{-webkit-app-region:no-drag}
 <div id="bg-overlay"></div>
 <div id="yt-player"></div>
 
-<!-- Full-height wrapper so BG stays fixed but content scrolls on mobile -->
 <div id="main-scroll" style="position:relative;z-index:10;height:100dvh;height:100vh">
 
-
-<!-- Electron window controls (hidden in browser) -->
 <div id="win-bar">
   <button id="win-btn-hide"  title="Ẩn xuống tray">–</button>
   <button id="win-btn-min"   title="Thu nhỏ">⊟</button>
@@ -110,16 +105,11 @@ body.in-electron header{-webkit-app-region:no-drag}
 
   <!-- HEADER -->
   <header class="flex items-center py-2 sm:py-3 gap-2" style="min-height:56px">
-    <!-- Spacer left (mirrors button width on right) to keep title visually centered on desktop -->
     <div class="hidden md:flex w-[120px] flex-shrink-0"></div>
-
-    <!-- Title + quote: centered -->
     <div class="flex-1 text-center select-none min-w-0 px-2">
       <h2 class="text-lg sm:text-xl font-bold tracking-widest text-white/75 uppercase" style="font-family:'Space Grotesk',sans-serif">ZenFlow</h2>
       <p id="quote" class="mt-1 text-xs text-white/55 italic transition-opacity duration-500 leading-relaxed line-clamp-2 md:line-clamp-none" style="min-height:1.5rem"></p>
     </div>
-
-    <!-- Buttons pinned to right -->
     <div class="flex items-center gap-1.5 flex-shrink-0">
       <span id="bg-label" class="text-xs text-white/35 tracking-wide mr-1 hidden lg:block"></span>
       <button id="btn-next-bg" class="gbtn w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white" title="Nền tiếp theo">
@@ -317,6 +307,10 @@ window.addEventListener('resize', () => {
     const bg = BG_LIST[bgIdx];
     if (bg && bg.id === 'stars') { initStars(); animateStars(); }
     else if (bg && bg.id === 'neon') { initStars(); animateNeon(); }
+    else if (bg && bg.id === 'deep-sea') { animateDeepSea(); }
+    else if (bg && bg.id === 'firefly') { animateFirefly(); }
+    else if (bg && bg.id === 'cosmos') { initStars(); animateCosmos(); }
+    else if (bg && bg.id === 'northern') { animateNorthern(); }
     else if (bg && bg.type === 'grad') { animateGrad(bg.colors); }
   }
 });
@@ -331,12 +325,29 @@ const BG_LIST = [
   {id:'sakura',   label:'✦ Sakura',    type:'grad', colors:['#1a0a14','#3d1a2e','#6b2d4a','#2d0f24'], ptcl:['#ffb7c5','#ff8fa3','#ffc8dd']},
   {id:'neon',     label:'✦ Neon',      type:'canvas'},
   {id:'zen',      label:'✦ Zen',       type:'grad', colors:['#06060f','#0a0a18','#080810'], orb:true},
+  {id:'deep-sea', label:'✦ Đáy biển',  type:'canvas'},
+  {id:'firefly',  label:'✦ Đom đóm',   type:'canvas'},
+  {id:'cosmos',   label:'✦ Vũ trụ',    type:'canvas'},
+  {id:'northern', label:'✦ Bắc cực quang', type:'canvas'},
+  {id:'cherry',   label:'✦ Hoa anh đào', type:'grad', colors:['#1a0a14','#4a1530','#2d0f24','#1a0a14'], ptcl:['#ffb7c5','#ff8fa3','#ffc8dd','#ffe4ec']},
+  {id:'midnight', label:'✦ Nửa đêm',   type:'grad', colors:['#000000','#0d0d1a','#050510','#000008']},
+  {id:'ember',    label:'✦ Than hồng', type:'grad', colors:['#0a0200','#1a0500','#2d0800','#1a0300'], ptcl:['#ff4500','#ff6b00','#ffa500']},
   {id:'p-stars',  label:'📷 Bầu trời sao',  type:'photo', url:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80'},
   {id:'p-forest', label:'📷 Rừng đêm',      type:'photo', url:'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80'},
   {id:'p-mountain',label:'📷 Núi tuyết',    type:'photo', url:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80'},
   {id:'p-beach',  label:'📷 Bãi biển',      type:'photo', url:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80'},
   {id:'p-cafe',   label:'📷 Quán cafe',     type:'photo', url:'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1920&q=80'},
   {id:'p-rain',   label:'📷 Mưa đêm',       type:'photo', url:'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1920&q=80'},
+  {id:'p-bamboo', label:'📷 Rừng tre',      type:'photo', url:'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1920&q=80'},
+  {id:'p-lake',   label:'📷 Hồ tĩnh lặng',  type:'photo', url:'https://images.unsplash.com/photo-1439853949212-36589f9db95f?w=1920&q=80'},
+  {id:'p-desert', label:'📷 Sa mạc đêm',    type:'photo', url:'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920&q=80'},
+  {id:'p-aurora', label:'📷 Cực quang thực', type:'photo', url:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80'},
+  {id:'p-waterfall',label:'📷 Thác nước',   type:'photo', url:'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=1920&q=80'},
+  {id:'p-foggy',  label:'📷 Sương mù',      type:'photo', url:'https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=1920&q=80'},
+  {id:'p-cherry', label:'📷 Hoa anh đào',   type:'photo', url:'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1920&q=80'},
+  {id:'p-lavender',label:'📷 Đồng oải hương',type:'photo', url:'https://images.unsplash.com/photo-1499002238440-d264edd596ec?w=1920&q=80'},
+  {id:'p-northern',label:'📷 Aurora thực',  type:'photo', url:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80'},
+  {id:'p-japan',  label:'📷 Đền Nhật Bản',  type:'photo', url:'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=1920&q=80'},
 ];
 
 let bgIdx = 0;
@@ -447,6 +458,199 @@ function animateNeon() {
   draw();
 }
 
+// ---- DEEP SEA ----
+function animateDeepSea() {
+  const bubbles = Array.from({length:60}, () => ({
+    x: Math.random()*bgCanvas.width, y: Math.random()*bgCanvas.height,
+    r: Math.random()*4+1, spd: Math.random()*0.4+0.1, a: Math.random()*0.4+0.1,
+    wobble: Math.random()*Math.PI*2, wobbleSpd: Math.random()*0.03+0.01
+  }));
+  const jellyfish = Array.from({length:5}, () => ({
+    x: Math.random()*bgCanvas.width, y: Math.random()*bgCanvas.height+bgCanvas.height*0.3,
+    r: Math.random()*30+20, spd: Math.random()*0.15+0.05, phase: Math.random()*Math.PI*2
+  }));
+  let t = 0;
+  function draw() {
+    t += 0.008;
+    bgCtx.fillStyle = 'rgba(0,8,16,0.18)';
+    bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    // Caustic light rays
+    for(let i=0;i<6;i++){
+      const x = bgCanvas.width*(0.1+i*0.15)+Math.sin(t*0.3+i)*40;
+      const grad = bgCtx.createLinearGradient(x,0,x+30,bgCanvas.height*0.7);
+      grad.addColorStop(0,'rgba(0,180,220,0.07)');
+      grad.addColorStop(1,'rgba(0,80,120,0)');
+      bgCtx.fillStyle=grad;
+      bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x+25,bgCanvas.height*0.7); bgCtx.lineTo(x-5,bgCanvas.height*0.7); bgCtx.closePath(); bgCtx.fill();
+    }
+    // Jellyfish
+    jellyfish.forEach(j => {
+      j.y -= j.spd; j.phase += 0.02;
+      if(j.y < -j.r*3) { j.y = bgCanvas.height + j.r; j.x = Math.random()*bgCanvas.width; }
+      const pulse = 1 + Math.sin(j.phase)*0.12;
+      const jg = bgCtx.createRadialGradient(j.x,j.y,0,j.x,j.y,j.r*pulse);
+      jg.addColorStop(0,'rgba(120,200,255,0.18)'); jg.addColorStop(0.5,'rgba(60,140,220,0.1)'); jg.addColorStop(1,'rgba(0,80,180,0)');
+      bgCtx.beginPath(); bgCtx.arc(j.x,j.y,j.r*pulse,0,Math.PI*2); bgCtx.fillStyle=jg; bgCtx.fill();
+      // tentacles
+      for(let k=0;k<5;k++){
+        bgCtx.beginPath(); bgCtx.strokeStyle='rgba(100,180,255,0.12)'; bgCtx.lineWidth=1;
+        bgCtx.moveTo(j.x+(k-2)*6,j.y+j.r*pulse*0.8);
+        bgCtx.bezierCurveTo(j.x+(k-2)*6+Math.sin(t+k)*8,j.y+j.r*2,j.x+(k-2)*6+Math.sin(t*0.7+k)*6,j.y+j.r*3,j.x+(k-2)*6,j.y+j.r*3.5);
+        bgCtx.stroke();
+      }
+    });
+    // Bubbles
+    bubbles.forEach(b => {
+      b.y -= b.spd; b.wobble += b.wobbleSpd;
+      b.x += Math.sin(b.wobble)*0.5;
+      if(b.y < -b.r*2) { b.y = bgCanvas.height+b.r; b.x = Math.random()*bgCanvas.width; }
+      bgCtx.beginPath(); bgCtx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      bgCtx.strokeStyle=`rgba(150,210,255,${b.a})`; bgCtx.lineWidth=0.8; bgCtx.stroke();
+    });
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ---- FIREFLY ----
+function animateFirefly() {
+  const flies = Array.from({length:80}, () => ({
+    x: Math.random()*bgCanvas.width, y: Math.random()*bgCanvas.height,
+    vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
+    a: 0, phase: Math.random()*Math.PI*2, phaseSpd: Math.random()*0.04+0.01,
+    r: Math.random()*2+1, color: Math.random()<0.7?[120,255,80]:[200,255,120]
+  }));
+  function draw() {
+    bgCtx.fillStyle='rgba(1,10,3,0.12)';
+    bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    flies.forEach(f => {
+      f.phase += f.phaseSpd;
+      f.a = Math.max(0,(Math.sin(f.phase)+1)/2);
+      f.x += f.vx + Math.sin(f.phase*0.3)*0.2;
+      f.y += f.vy + Math.cos(f.phase*0.2)*0.15;
+      if(f.x<0) f.x=bgCanvas.width; if(f.x>bgCanvas.width) f.x=0;
+      if(f.y<0) f.y=bgCanvas.height; if(f.y>bgCanvas.height) f.y=0;
+      if(f.a > 0.1) {
+        const fg = bgCtx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*8);
+        fg.addColorStop(0,`rgba(${f.color},${f.a*0.9})`);
+        fg.addColorStop(0.3,`rgba(${f.color},${f.a*0.3})`);
+        fg.addColorStop(1,`rgba(${f.color},0)`);
+        bgCtx.beginPath(); bgCtx.arc(f.x,f.y,f.r*8,0,Math.PI*2); bgCtx.fillStyle=fg; bgCtx.fill();
+        bgCtx.beginPath(); bgCtx.arc(f.x,f.y,f.r,0,Math.PI*2);
+        bgCtx.fillStyle=`rgba(220,255,200,${f.a})`; bgCtx.fill();
+      }
+    });
+    // Ground silhouette
+    bgCtx.fillStyle='rgba(0,5,0,0.6)';
+    bgCtx.fillRect(0,bgCanvas.height*0.82,bgCanvas.width,bgCanvas.height*0.18);
+    // Grass blades
+    bgCtx.strokeStyle='rgba(10,40,5,0.8)'; bgCtx.lineWidth=1.5;
+    for(let i=0;i<80;i++){
+      const gx=i*(bgCanvas.width/80); const gh=15+Math.random()*20;
+      bgCtx.beginPath(); bgCtx.moveTo(gx,bgCanvas.height*0.82);
+      bgCtx.quadraticCurveTo(gx+5,bgCanvas.height*0.82-gh*0.5,gx+(Math.random()-0.5)*10,bgCanvas.height*0.82-gh);
+      bgCtx.stroke();
+    }
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ---- COSMOS ----
+function animateCosmos() {
+  let t = 0;
+  const nebula = Array.from({length:5}, () => ({
+    x: Math.random()*bgCanvas.width, y: Math.random()*bgCanvas.height,
+    r: Math.random()*200+100, color: [[120,60,200],[60,120,200],[200,60,100],[60,200,180],[180,100,60]][Math.floor(Math.random()*5)]
+  }));
+  function draw() {
+    t += 0.003;
+    bgCtx.fillStyle='rgba(0,0,10,0.06)';
+    bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    // Nebula clouds
+    nebula.forEach(n => {
+      const ng = bgCtx.createRadialGradient(n.x+Math.sin(t*0.2)*20,n.y+Math.cos(t*0.15)*15,0,n.x,n.y,n.r);
+      ng.addColorStop(0,`rgba(${n.color},0.04)`);
+      ng.addColorStop(0.5,`rgba(${n.color},0.02)`);
+      ng.addColorStop(1,`rgba(${n.color},0)`);
+      bgCtx.beginPath(); bgCtx.arc(n.x,n.y,n.r,0,Math.PI*2); bgCtx.fillStyle=ng; bgCtx.fill();
+    });
+    // Stars twinkle
+    starList.forEach(s => {
+      if(s.shoot) return;
+      s.a += s.spd*(Math.random()>0.5?1:-1); s.a=Math.max(0.04,Math.min(1,s.a));
+      bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      bgCtx.fillStyle=`rgba(255,255,255,${s.a})`; bgCtx.fill();
+      // Occasional star glow
+      if(s.a>0.8&&s.r>1){
+        const sg=bgCtx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*6);
+        sg.addColorStop(0,`rgba(200,210,255,${s.a*0.3})`); sg.addColorStop(1,'rgba(200,210,255,0)');
+        bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r*6,0,Math.PI*2); bgCtx.fillStyle=sg; bgCtx.fill();
+      }
+    });
+    // Slow rotating galaxy arm hint
+    bgCtx.save(); bgCtx.translate(bgCanvas.width/2,bgCanvas.height/2); bgCtx.rotate(t*0.02);
+    const armG=bgCtx.createRadialGradient(0,0,0,0,0,bgCanvas.width*0.35);
+    armG.addColorStop(0,'rgba(180,160,255,0.03)'); armG.addColorStop(0.4,'rgba(100,80,200,0.015)'); armG.addColorStop(1,'rgba(0,0,0,0)');
+    bgCtx.beginPath(); bgCtx.ellipse(0,0,bgCanvas.width*0.35,bgCanvas.height*0.12,0,0,Math.PI*2);
+    bgCtx.fillStyle=armG; bgCtx.fill(); bgCtx.restore();
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ---- NORTHERN LIGHTS (canvas) ----
+function animateNorthern() {
+  initStars();
+  let t = 0;
+  const bands = Array.from({length:5}, (_, i) => ({
+    offset: i*0.4, spd: 0.003+i*0.001,
+    color: [[0,255,120],[0,200,180],[0,150,255],[80,255,150],[50,220,200]][i], amp: 60+i*20
+  }));
+  function draw() {
+    t += 0.008;
+    bgCtx.fillStyle='rgba(0,10,8,0.15)';
+    bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    // Stars
+    starList.slice(0,120).forEach(s => {
+      s.a += s.spd*(Math.random()>0.5?1:-1); s.a=Math.max(0.04,Math.min(0.7,s.a));
+      bgCtx.beginPath(); bgCtx.arc(s.x,s.y*0.6,s.r*0.7,0,Math.PI*2);
+      bgCtx.fillStyle=`rgba(220,240,255,${s.a})`; bgCtx.fill();
+    });
+    // Aurora bands
+    const baseY = bgCanvas.height * 0.35;
+    bands.forEach((b, bi) => {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, bgCanvas.height);
+      const pts = 12;
+      for(let i=0;i<=pts;i++){
+        const x = (i/pts)*bgCanvas.width;
+        const y = baseY + Math.sin(t*b.spd*100 + i*0.8 + b.offset*10)*b.amp + bi*25;
+        if(i===0) bgCtx.lineTo(x,y); else bgCtx.lineTo(x,y);
+      }
+      bgCtx.lineTo(bgCanvas.width, bgCanvas.height);
+      bgCtx.closePath();
+      const ag = bgCtx.createLinearGradient(0,baseY-b.amp,0,baseY+b.amp*2);
+      ag.addColorStop(0,`rgba(${b.color},0)`);
+      ag.addColorStop(0.3,`rgba(${b.color},0.12)`);
+      ag.addColorStop(0.6,`rgba(${b.color},0.06)`);
+      ag.addColorStop(1,`rgba(${b.color},0)`);
+      bgCtx.fillStyle=ag; bgCtx.fill();
+    });
+    // Silhouette
+    bgCtx.fillStyle='#000a06';
+    bgCtx.fillRect(0,bgCanvas.height*0.8,bgCanvas.width,bgCanvas.height*0.2);
+    // Trees
+    bgCtx.fillStyle='rgba(0,8,4,0.95)';
+    for(let i=0;i<30;i++){
+      const tx=i*(bgCanvas.width/30)+Math.sin(i)*15; const th=40+Math.sin(i*2.3)*20;
+      bgCtx.beginPath(); bgCtx.moveTo(tx,bgCanvas.height*0.8); bgCtx.lineTo(tx+8,bgCanvas.height*0.8-th); bgCtx.lineTo(tx+16,bgCanvas.height*0.8); bgCtx.fill();
+    }
+    animRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
 function spawnParticles(colors) {
   for (let i=0;i<22;i++){
     const p=document.createElement('div'); p.className='ptcl';
@@ -494,6 +698,18 @@ function applyBg(idx) {
   } else if (bg.type === 'canvas' && bg.id === 'neon') {
     bgCtx.fillStyle='#03020e'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
     initStars(); animateNeon();
+  } else if (bg.type === 'canvas' && bg.id === 'deep-sea') {
+    bgCtx.fillStyle='#000810'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    animateDeepSea();
+  } else if (bg.type === 'canvas' && bg.id === 'firefly') {
+    bgCtx.fillStyle='#010a03'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    animateFirefly();
+  } else if (bg.type === 'canvas' && bg.id === 'cosmos') {
+    bgCtx.fillStyle='#00000a'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    initStars(); animateCosmos();
+  } else if (bg.type === 'canvas' && bg.id === 'northern') {
+    bgCtx.fillStyle='#000a08'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+    animateNorthern();
   } else if (bg.type === 'grad') {
     animateGrad(bg.colors);
     if (bg.ptcl) spawnParticles(bg.ptcl);
@@ -647,7 +863,6 @@ function onYouTubeIframeAPIReady() {
     events:{
       onReady: e => {
         ytReady=true; e.target.setVolume(ytVol); ytUpdateUI(0,false);
-        // Prevent fullscreen takeover on iOS/mobile
         const iframe = e.target.getIframe();
         if (iframe) {
           iframe.setAttribute('playsinline', '');
@@ -780,10 +995,10 @@ ringEl.style.strokeDasharray=`${CIRC} ${CIRC}`;
 function fmtTime(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60; return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`; }
 function updateDisp(){ document.getElementById('t-display').textContent=fmtTime(rem); ringEl.style.strokeDashoffset=CIRC-(rem/dur)*CIRC; }
 
+// BUG FIX: audioPlay() no longer auto-restores ambient sounds from localStorage.
+// Ambient sounds always start silent — user enables manually each session.
 function audioPlay() {
   getCtx();
-  const saved=JSON.parse(localStorage.getItem('zf-amb')||'{}');
-  Object.entries(saved).forEach(([s,v])=>{ if(v>0&&!ambNodes[s]) ambStart(s,v/100); });
   if(ytReady&&ytP&&ytP.getPlayerState()!==YT.PlayerState.PLAYING) ytP.playVideo();
 }
 function audioPause() {
@@ -922,7 +1137,6 @@ function renderAddPlList() {
     list.appendChild(row);
   });
 }
-
 
 // Electron widget mode
 if (window.zenAPI) {
